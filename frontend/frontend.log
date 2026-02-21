@@ -1,0 +1,239 @@
+
+> wlt-frontend@1.0.0 dev
+> vite
+
+[2m4:48:00 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because vite config has changed
+
+  [32m[1mVITE[22m v6.4.1[39m  [2mready in [0m[1m1115[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m5:14:34 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/AvatarPicker.tsx[22m
+[2m5:14:35 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33m@react-three/fiber, @react-three/drei[32m[39m
+[2m5:14:35 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
+[2m5:14:36 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/AvatarPicker.tsx[22m Could not Fast Refresh ("DEFAULT_AVATAR" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m5:14:36 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Lobby.tsx[22m
+[2m5:15:12 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Lobby.tsx[22m
+[2m5:15:57 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Room.tsx[22m
+[2m5:15:57 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\Projects\Devhacks\frontend\src\components\Room.tsx: Unexpected token (276:20)
+
+[0m [90m 274 |[31m                     animate[33m=[31m{{ opacity[33m:[31m [35m1[31m[33m,[31m x[33m:[31m [35m0[31m }}
+ [90m 275 |[31m                     transition[33m=[31m{{ delay[33m:[31m i [33m*[31m [35m0.06[31m }}
+[31m[1m>[22m[31m[90m 276 |[31m                     [33m<[31m[33mdiv[31m style[33m=[31m{{ display[33m:[31m [32m'flex'[31m[33m,[31m alignItems[33m:[31m [32m'center'[31m[33m,[31m gap[33m:[31m [32m'0.75rem'[31m[33m,[31m padding[33m:[31m [32m'0.5rem 0.75rem'[31m[33m,[31m background[33m:[31m [32m'rgba(26,26,26,0.9)'[31m[33m,[31m border[33m:[31m [32m`1px solid ${player.id === myId ? 'rgba(255,215,0,0.4)' : 'rgba(255,215,0,0.1)'}`[31m[33m,[31m borderRadius[33m:[31m [35m3[31m }}[33m>[31m
+ [90m     |[31m                     [31m[1m^[22m[31m
+ [90m 277 |[31m                      {playerHeadshot
+ [90m 278 |[31m                        [33m?[31m [33m<[31m[33mimg[31m src[33m=[31m{playerHeadshot} alt[33m=[31m{player[33m.[31mname} style[33m=[31m{{ width[33m:[31m [35m40[31m[33m,[31m height[33m:[31m [35m40[31m[33m,[31m borderRadius[33m:[31m [32m'50%'[31m[33m,[31m objectFit[33m:[31m [32m'cover'[31m[33m,[31m flexShrink[33m:[31m [35m0[31m }} [33m/[31m[33m>[31m
+ [90m 279 |[31m                        [33m:[31m [33m<[31m[33mdiv[31m style[33m=[31m{{ width[33m:[31m [35m40[31m[33m,[31m height[33m:[31m [35m40[31m[33m,[31m borderRadius[33m:[31m [32m'50%'[31m[33m,[31m background[33m:[31m getAvatarColor(player[33m.[31mname)[33m,[31m display[33m:[31m [32m'flex'[31m[33m,[31m alignItems[33m:[31m [32m'center'[31m[33m,[31m justifyContent[33m:[31m [32m'center'[31m[33m,[31m flexShrink[33m:[31m [35m0[31m }}[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/Projects/Devhacks/frontend/src/components/Room.tsx[39m:276:20
+[33m  275|                      transition={{ delay: i * 0.06 }}
+  276|                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(26,26,26,0.9)', border: `1px solid ${player.id === myId ? 'rgba(255,215,0,0.4)' : 'rgba(255,215,0,0.1)'}`, borderRadius: 3 }}>
+  277|                       {playerHeadshot
+     |                                    ^
+  278|                         ? <img src={playerHeadshot} alt={player.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+  279|                         : <div style={{ width: 40, height: 40, borderRadius: '50%', background: getAvatarColor(player.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>[39m
+      at constructor (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6619:16)
+      at TypeScriptParserMixin.jsxParseIdentifier (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4569:12)
+      at TypeScriptParserMixin.jsxParseNamespacedName (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4576:23)
+      at TypeScriptParserMixin.jsxParseAttribute (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4652:22)
+      at TypeScriptParserMixin.jsxParseOpeningElementAfterName (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4667:28)
+      at TypeScriptParserMixin.jsxParseOpeningElementAfterName (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10043:18)
+      at TypeScriptParserMixin.jsxParseOpeningElementAt (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4662:17)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4686:33)
+      at TypeScriptParserMixin.jsxParseElement (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4759:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11675:28)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.parseReturnStatement (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13142:28)
+      at TypeScriptParserMixin.parseStatementContent (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+[2m5:16:40 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Room.tsx[22m
+[2m5:16:56 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Room.tsx[22m
+[2m5:17:50 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/TableScene.tsx[22m
+[2m5:18:25 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/TableScene.tsx[22m
+[2m5:53:06 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/NightActionModal.tsx[22m
+[2m5:53:06 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\Projects\Devhacks\frontend\src\components\NightActionModal.tsx: Adjacent JSX elements must be wrapped in an enclosing tag. Did you want a JSX fragment <>...</>? (164:16)
+
+[0m [90m 162 |[31m                   )}
+ [90m 163 |[31m                 [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 164 |[31m                 [33m<[31m[33mspan[31m
+ [90m     |[31m                 [31m[1m^[22m[31m
+ [90m 165 |[31m                   style[33m=[31m{{
+ [90m 166 |[31m                     marginLeft[33m:[31m [32m'auto'[31m[33m,[31m
+ [90m 167 |[31m                     fontSize[33m:[31m [32m'1.2rem'[31m[33m,[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/Projects/Devhacks/frontend/src/components/NightActionModal.tsx[39m:164:16
+[33m  167|                      fontSize: '1.2rem',
+  168|                      opacity: 0.5,
+  169|                    }}
+     |                  ^
+  170|                  >
+  171|                    {config.icon}[39m
+      at constructor (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4742:18)
+      at TypeScriptParserMixin.jsxParseElement (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4762:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at TypeScriptParserMixin.parseExpressionBase (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.parseStatementContent (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12895:23)
+      at TypeScriptParserMixin.parseStatementContent (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12100:24)
+      at TypeScriptParserMixin.parseArrowExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12075:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11687:12)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+      at TypeScriptParserMixin.parseExprListItem (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12175:18)
+      at TypeScriptParserMixin.parseCallExpressionArguments (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11252:22)
+      at TypeScriptParserMixin.parseCoverCallAndAsyncArrowHead (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11186:29)
+      at TypeScriptParserMixin.parseSubscript (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11120:19)
+      at TypeScriptParserMixin.parseSubscript (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9272:18)
+[2m5:53:07 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/VotePanel.tsx[22m
+[2m5:53:07 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: D:\Projects\Devhacks\frontend\src\components\VotePanel.tsx: Unexpected token (146:15)
+
+[0m [90m 144 |[31m                   [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+ [90m 145 |[31m                 )}
+[31m[1m>[22m[31m[90m 146 |[31m               [33m<[31m[33m/[31m[33mmotion[31m[33m.[31mdiv[33m>[31m
+ [90m     |[31m                [31m[1m^[22m[31m
+ [90m 147 |[31m             )[33m;[31m
+ [90m 148 |[31m           })}
+ [90m 149 |[31m         [33m<[31m[33m/[31m[33mAnimatePresence[31m[33m>[31m[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mD:/Projects/Devhacks/frontend/src/components/VotePanel.tsx[39m:146:15
+[33m  153|          <p
+  154|            style={{
+  155|              marginTop: '1rem',
+     |               ^
+  156|              textAlign: 'center',
+  157|              color: 'var(--noir-text-dim)',[39m
+      at constructor (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at TypeScriptParserMixin.raise (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6619:16)
+      at TypeScriptParserMixin.jsxParseIdentifier (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4569:12)
+      at TypeScriptParserMixin.jsxParseNamespacedName (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4576:23)
+      at TypeScriptParserMixin.jsxParseElementName (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4585:21)
+      at TypeScriptParserMixin.jsxParseOpeningElementAt (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4661:22)
+      at TypeScriptParserMixin.jsxParseElementAt (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4686:33)
+      at TypeScriptParserMixin.jsxParseElement (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4749:17)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4762:19)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9775:39
+      at TypeScriptParserMixin.tryParse (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:6907:20)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9775:18)
+      at TypeScriptParserMixin.parseExpressionBase (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10784:23)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10780:17)
+      at TypeScriptParserMixin.parseStatementContent (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12895:23)
+      at TypeScriptParserMixin.parseStatementContent (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12100:24)
+      at TypeScriptParserMixin.parseArrowExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12075:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11687:12)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:9786:20)
+      at D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12426:12)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:10800:17)
+      at TypeScriptParserMixin.parseMaybeAssignAllowInOrVoidPattern (D:\Projects\Devhacks\frontend\node_modules\@babel\parser\lib\index.js:12493:17)
+[2m5:54:11 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/NightActionModal.tsx[22m
+[2m5:54:13 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/VotePanel.tsx[22m
+[2m5:54:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/AvatarPicker.tsx[22m
+[2m5:54:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/AvatarPicker.tsx[22m Could not Fast Refresh ("DEFAULT_AVATAR" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m5:54:46 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Lobby.tsx[22m
+[2m5:55:07 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/AvatarPicker.tsx, /src/components/Lobby.tsx, /src/components/Room.tsx, /src/components/TableScene.tsx, /src/components/NightActionModal.tsx, /src/components/VotePanel.tsx[22m
+[2m5:55:07 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/AvatarPicker.tsx[22m Could not Fast Refresh ("DEFAULT_AVATAR" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m5:55:07 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Lobby.tsx[22m
+[2m5:59:51 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/AvatarPicker.tsx[22m
+[2m5:59:51 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/AvatarPicker.tsx[22m Could not Fast Refresh ("DEFAULT_AVATAR" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m5:59:51 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Lobby.tsx[22m
+[2m6:00:13 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/AvatarPicker.tsx, /src/components/Lobby.tsx, /src/components/Room.tsx, /src/components/TableScene.tsx, /src/components/NightActionModal.tsx, /src/components/VotePanel.tsx[22m
+[2m6:00:13 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/AvatarPicker.tsx[22m Could not Fast Refresh ("DEFAULT_AVATAR" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m6:00:13 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/Lobby.tsx[22m
+[2m6:06:38 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/CutscenePlayer.tsx[22m

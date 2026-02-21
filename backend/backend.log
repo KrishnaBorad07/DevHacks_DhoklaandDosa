@@ -1,0 +1,84 @@
+
+> wlt-backend@1.0.0 dev
+> tsx watch src/server.ts
+
+🎭 Who Lies Tonight – Server running
+   Local:   http://localhost:3001
+   Network: http://10.0.0.114:3001  ← share this with LAN friends
+   Min players: 4 | Max: 12
+[Socket] Connected: n7Ux8TozwwSyk9SiAAAC
+[Socket] Connected: 346hDDTNKg0HtGK0AAAD
+[Socket] Disconnected: n7Ux8TozwwSyk9SiAAAC (transport close)
+[Socket] Disconnected: 346hDDTNKg0HtGK0AAAD (transport close)
+[Socket] Connected: G9FTAwM6uKfzHqxGAAAG
+[Socket] Connected: 5V9wNTYEbAgd9NhxAAAH
+[Room] Created: SJSW5M by JP22
+[Socket] Connected: ol7ViY4sIVD5-GT9AAAK
+[Socket] Connected: Tsv3vAhQAUdPUpNyAAAL
+[Socket] Disconnected: ol7ViY4sIVD5-GT9AAAK (transport close)
+[Socket] Disconnected: Tsv3vAhQAUdPUpNyAAAL (transport close)
+[Socket] Connected: 5Wa8K2dpriLvEmvjAAAO
+[Socket] Connected: _Uo7NN5vbEWemWdvAAAP
+[Socket] Disconnected: 5Wa8K2dpriLvEmvjAAAO (transport close)
+[Socket] Disconnected: _Uo7NN5vbEWemWdvAAAP (transport close)
+[Socket] Connected: Zyq55RAaS3FILfELAAAS
+[Socket] Connected: 7RbEWTw31G99VupQAAAT
+[Socket] Disconnected: Zyq55RAaS3FILfELAAAS (transport close)
+[Socket] Disconnected: 7RbEWTw31G99VupQAAAT (transport close)
+[Socket] Connected: ROJbsnabek404u4vAAAW
+[Socket] Connected: R8scS_7X-roqmM1JAAAX
+[Socket] Disconnected: ROJbsnabek404u4vAAAW (transport close)
+[Socket] Disconnected: R8scS_7X-roqmM1JAAAX (transport close)
+[Socket] Connected: g6Wd3oGTi1bjOgctAAAa
+[Socket] Connected: cj62etDyBeiIfdUaAAAb
+[Socket] Disconnected: g6Wd3oGTi1bjOgctAAAa (transport close)
+[Socket] Disconnected: cj62etDyBeiIfdUaAAAb (transport close)
+[Socket] Connected: 310ntscBjd52HvruAAAe
+[Socket] Connected: 1tS1MkkWQi71Zyk2AAAf
+[Room] deep joined SJSW5M
+[Socket] Connected: TEDt-Re4EQkVRGRhAAAi
+[Socket] Connected: emAgEWyLT4geyERkAAAj
+[Socket] Disconnected: TEDt-Re4EQkVRGRhAAAi (transport close)
+[Socket] Disconnected: emAgEWyLT4geyERkAAAj (transport close)
+[Socket] Connected: tCYv8evyjVHBEg-OAAAm
+[Socket] Connected: BhftCxL5VKHEb6wNAAAn
+[Socket] Disconnected: tCYv8evyjVHBEg-OAAAm (transport close)
+[Socket] Disconnected: BhftCxL5VKHEb6wNAAAn (transport close)
+[Socket] Connected: BAc0UgWRLLearc1KAAAq
+[Socket] Connected: sss-LXvUOf2KWny9AAAr
+[Room] Alisha joined SJSW5M
+[Socket] Connected: ybKvgtntdXlG5L5sAAAu
+[Socket] Connected: rHyXYOf8Q0vpY70QAAAv
+[Room] Krishna joined SJSW5M
+[Game] Started in room SJSW5M with 4 players
+[Socket] Disconnected: G9FTAwM6uKfzHqxGAAAG (transport close)
+[Socket] Disconnected: 5V9wNTYEbAgd9NhxAAAH (transport close)
+[Socket] Connected: Al8Q4rx3lxhc1tD1AAAy
+[Socket] Connected: hdeFO9FZy-KIp3_VAAAz
+[Socket] Disconnected: 310ntscBjd52HvruAAAe (transport close)
+[Socket] Disconnected: 1tS1MkkWQi71Zyk2AAAf (transport close)
+[Socket] Connected: p_OFsD74LvgJ_kMCAAA2
+[Socket] Connected: MHb8FwxMxl9xJwCUAAA3
+[Cleanup] Removing inactive room SJSW5M
+[Socket] Disconnected: ybKvgtntdXlG5L5sAAAu (transport close)
+[Socket] Disconnected: rHyXYOf8Q0vpY70QAAAv (transport close)
+[Socket] Disconnected: sss-LXvUOf2KWny9AAAr (transport close)
+[Socket] Disconnected: BAc0UgWRLLearc1KAAAq (transport close)
+[Socket] Disconnected: Al8Q4rx3lxhc1tD1AAAy (transport close)
+[Socket] Disconnected: hdeFO9FZy-KIp3_VAAAz (transport close)
+[Socket] Disconnected: p_OFsD74LvgJ_kMCAAA2 (transport close)
+[Socket] Disconnected: MHb8FwxMxl9xJwCUAAA3 (transport close)
+[Socket] Connected: MqW3Dayc1_YhZbvMAAA6
+[Socket] Connected: j_J-haPWM9Zv1XOkAAA7
+[Room] Created: B3PSGY by Jp12
+[Socket] Connected: 3XNaUskWP9jXu2YYAAA-
+[Socket] Connected: Koy0nvAF7Ktg1ouhAAA_
+[Socket] Connected: Es8mnccleLYA3yVhAABC
+[Socket] Connected: -rIL9Blcomx42PQ5AABD
+[Room] deep joined B3PSGY
+[Room] Alisha joined B3PSGY
+[Socket] Connected: DTGIBh6A6u7mMbeYAABG
+[Socket] Connected: RzDNAhntfS7bfKs-AABH
+[Room] krishna joined B3PSGY
+[Game] Started in room B3PSGY with 4 players
+[Night] All actions submitted early in room B3PSGY

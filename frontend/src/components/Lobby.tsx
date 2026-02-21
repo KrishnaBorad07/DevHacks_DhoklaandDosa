@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarPicker, DEFAULT_AVATAR } from './AvatarPicker';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
 import type { Avatar } from '../types/game';
 import type { useGameState } from '../hooks/useGameState';
 
@@ -53,7 +53,7 @@ export function Lobby({ api }: LobbyProps) {
     joinRoom(roomCode.toUpperCase(), username.trim(), avatar);
   };
 
-  const svgPreview = renderAvatarSVG(avatar.head, avatar.body, avatar.accessory, avatar.colors, 64);
+  const headshotUrl = avatar.url ? getHeadshotUrl(avatar.url) : '';
 
   return (
     <div
@@ -114,7 +114,7 @@ export function Lobby({ api }: LobbyProps) {
         >
           {/* LEFT: Avatar picker */}
           <div style={{ padding: '1.5rem' }}>
-            <AvatarPicker value={avatar} onChange={setAvatar} />
+            <AvatarPicker value={avatar} onChange={setAvatar} playerName={username || 'You'} />
           </div>
 
           {/* Divider */}
@@ -211,7 +211,6 @@ export function Lobby({ api }: LobbyProps) {
               )}
             </AnimatePresence>
 
-            {/* Avatar mini preview */}
             <div
               className="flex items-center gap-2"
               style={{
@@ -222,15 +221,32 @@ export function Lobby({ api }: LobbyProps) {
                 marginBottom: '1.5rem',
               }}
             >
-              <div
-                dangerouslySetInnerHTML={{ __html: svgPreview }}
-                style={{ width: 64, height: 64, flexShrink: 0 }}
-              />
+              {/* Avatar preview: headshot or initials fallback */}
+              {headshotUrl ? (
+                <img
+                  src={headshotUrl}
+                  alt="avatar"
+                  style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,215,0,0.3)', flexShrink: 0 }}
+                />
+              ) : (
+                <div style={{
+                  width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+                  background: `radial-gradient(135deg, ${getAvatarColor(username || 'X')}aa, ${getAvatarColor(username || 'X')}44)`,
+                  border: `2px solid ${getAvatarColor(username || 'X')}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: '#fff' }}>
+                    {getInitials(username || '??')}
+                  </span>
+                </div>
+              )}
               <div>
                 <p style={{ color: 'var(--noir-gold)', fontFamily: 'var(--font-display)', fontSize: '0.75rem' }}>
                   {username || 'Your Alias'}
                 </p>
-                <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.7rem' }}>Ready to enter the city</p>
+                <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.7rem' }}>
+                  {avatar.url ? 'Custom 3D character' : 'Ready to enter the city'}
+                </p>
               </div>
             </div>
 
