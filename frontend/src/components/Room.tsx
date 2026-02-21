@@ -212,8 +212,8 @@ export function Room({ api }: RoomProps) {
             headshotUrl
               ? <img src={headshotUrl} alt="avatar" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,215,0,0.3)' }} />
               : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(myPlayer.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', color: '#fff' }}>{getInitials(myPlayer.name)}</span>
-                </div>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', color: '#fff' }}>{getInitials(myPlayer.name)}</span>
+              </div>
           )}
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.7rem', color: 'var(--noir-gold)' }}>
@@ -270,7 +270,7 @@ export function Room({ api }: RoomProps) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
               {players.map((player, i) => {
-                  const playerHeadshot = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
+                const playerHeadshot = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
                 return (
                   <motion.div
                     key={player.id}
@@ -282,8 +282,8 @@ export function Room({ api }: RoomProps) {
                     {playerHeadshot
                       ? <img src={playerHeadshot} alt={player.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                       : <div style={{ width: 40, height: 40, borderRadius: '50%', background: getAvatarColor(player.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.85rem' }}>{getInitials(player.name)}</span>
-                        </div>
+                        <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.85rem' }}>{getInitials(player.name)}</span>
+                      </div>
                     }
                     <div style={{ flex: 1 }}>
                       <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.78rem', color: 'var(--noir-gold)' }}>
@@ -421,6 +421,7 @@ export function Room({ api }: RoomProps) {
                 voteTally={voteTally}
                 phase={phase}
                 onPlayerClick={phase === 'vote' && isAlive ? handleVote : undefined}
+                showLabels={!showRoleReveal && !cutscene}
               />
             )}
 
@@ -479,8 +480,8 @@ export function Room({ api }: RoomProps) {
                         {memberHeadshot
                           ? <img src={memberHeadshot} alt={m.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
                           : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(m.name), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.8rem' }}>{getInitials(m.name)}</span>
-                            </div>
+                            <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.8rem' }}>{getInitials(m.name)}</span>
+                          </div>
                         }
                         <p style={{ fontSize: '0.7rem', color: pub?.alive === false ? 'var(--noir-text-dim)' : 'var(--noir-red)' }}>
                           {m.name} {pub?.alive === false ? '(dead)' : ''}
