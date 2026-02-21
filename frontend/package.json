@@ -12,6 +12,7 @@
     "@pixi/react": "^7.1.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@splinetool/react-spline": "^4.1.0",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.8.1",
     "animejs": "^4.0.2",
