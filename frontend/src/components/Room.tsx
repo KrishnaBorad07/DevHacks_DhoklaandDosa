@@ -349,11 +349,11 @@ export function Room({ api }: RoomProps) {
           style={{
             flex: 1,
             display: 'grid',
-            gridTemplateColumns: '1fr minmax(0, 440px)',
+            gridTemplateColumns: 'minmax(0, 1.55fr) minmax(320px, 400px)',
             gridTemplateRows: 'auto 1fr',
             gap: '0.75rem',
             padding: '0.75rem',
-            maxWidth: 1200,
+            maxWidth: 1480,
             width: '100%',
             margin: '0 auto',
           }}
@@ -393,6 +393,7 @@ export function Room({ api }: RoomProps) {
               <TableScene
                 players={players}
                 myId={myId}
+                myRole={myRole}
                 voteTally={voteTally}
                 phase={phase}
                 onPlayerClick={phase === 'vote' && isAlive ? handleVote : undefined}
