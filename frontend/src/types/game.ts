@@ -9,10 +9,8 @@ export type NightOutcome = 'killed' | 'saved' | 'no_kill';
 export type ChatChannel = 'global' | 'mafia';
 
 export interface Avatar {
-  head: number;
-  body: number;
-  accessory: number;
-  colors: Record<string, string>;
+  url: string; // Ready Player Me GLB URL: https://models.readyplayer.me/{id}.glb
+               // Empty string = no avatar created yet (shows initials fallback)
 }
 
 export interface PublicPlayer {
