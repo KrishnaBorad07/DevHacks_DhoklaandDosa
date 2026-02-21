@@ -1,0 +1,579 @@
+/* =============================================================================
+   index.css – Who Lies Tonight – Global neon-noir 1920s–1980s crime aesthetic
+   ============================================================================= */
+
+/* ── Font imports are in index.html ── */
+
+/* ── CSS Custom Properties ─────────────────────────────────────────────────── */
+:root {
+  /* Core palette */
+  --noir-black: #000000;
+  --noir-deep: #080808;
+  --noir-dark: #0d0d0d;
+  --noir-gray: #1a1a1a;
+  --noir-gray-mid: #2a2a2a;
+  --noir-red: #ff0000;
+  --noir-red-dim: #cc0000;
+  --noir-red-glow: rgba(255, 0, 0, 0.4);
+  --noir-gold: #ffd700;
+  --noir-gold-dim: #c9a800;
+  --noir-gold-glow: rgba(255, 215, 0, 0.35);
+  --noir-neon-blue: #00d4ff;
+  --noir-neon-purple: #9b00ff;
+  --noir-text: #e8e0d0;
+  --noir-text-dim: #888880;
+
+  /* Fonts */
+  --font-display: "Cinzel", "Georgia", serif;
+  --font-ui: "Rajdhani", "Trebuchet MS", sans-serif;
+  --font-typewriter: "Special Elite", "Courier New", monospace;
+
+  /* Shadows and glows */
+  --shadow-red: 0 0 20px rgba(255, 0, 0, 0.6), 0 0 40px rgba(255, 0, 0, 0.3);
+  --shadow-gold:
+    0 0 20px rgba(255, 215, 0, 0.5), 0 0 35px rgba(255, 215, 0, 0.2);
+  --shadow-blue: 0 0 20px rgba(0, 212, 255, 0.5);
+  --shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.9);
+
+  /* Timing */
+  --transition-fast: 150ms ease;
+  --transition-med: 300ms ease;
+  --transition-slow: 600ms ease;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--noir-black);
+  color: var(--noir-text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--noir-gray);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--noir-red-dim);
+  border-radius: 3px;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-typewriter {
+  font-family: var(--font-typewriter);
+}
+
+/* ── Animated rain background ───────────────────────────────────────────────── */
+.rain-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.rain-bg::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  width: 140%;
+  height: 140%;
+  background-image: repeating-linear-gradient(
+    105deg,
+    transparent 0,
+    transparent 3px,
+    rgba(0, 212, 255, 0.04) 3px,
+    rgba(0, 212, 255, 0.04) 4px
+  );
+  background-size: 8px 60px;
+  animation: rain-fall 0.5s linear infinite;
+  transform: skewX(-15deg);
+}
+
+.rain-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 60% 40% at 50% 100%,
+      rgba(255, 0, 0, 0.08) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 20% 50%,
+      rgba(0, 212, 255, 0.05) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 80% 30%,
+      rgba(155, 0, 255, 0.04) 0%,
+      transparent 60%
+    );
+}
+
+@keyframes rain-fall {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 8px 60px;
+  }
+}
+
+/* ── Neon city gradient ─────────────────────────────────────────────────────── */
+.city-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    to bottom,
+    #000000 0%,
+    #050510 30%,
+    #0a0a15 60%,
+    #050505 100%
+  );
+}
+
+/* ── Glass card ─────────────────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(13, 13, 13, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 4px;
+  box-shadow:
+    var(--shadow-dark),
+    inset 0 1px 0 rgba(255, 215, 0, 0.08);
+}
+
+/* ── Noir button ────────────────────────────────────────────────────────────── */
+.btn-noir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.6rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all var(--transition-med);
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+.btn-noir::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-noir:hover::before {
+  opacity: 0.08;
+}
+.btn-noir:active {
+  transform: scale(0.97);
+}
+.btn-noir:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-red {
+  color: var(--noir-red);
+  border-color: var(--noir-red);
+  text-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+}
+.btn-red:hover {
+  box-shadow: var(--shadow-red);
+}
+
+.btn-gold {
+  color: var(--noir-gold);
+  border-color: var(--noir-gold);
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+.btn-gold:hover {
+  box-shadow: var(--shadow-gold);
+}
+
+.btn-filled-red {
+  background: var(--noir-red);
+  color: var(--noir-black);
+  border-color: var(--noir-red);
+  font-weight: 700;
+}
+.btn-filled-red:hover {
+  box-shadow: var(--shadow-red);
+  filter: brightness(1.1);
+}
+
+.btn-filled-gold {
+  background: var(--noir-gold);
+  color: var(--noir-black);
+  border-color: var(--noir-gold);
+  font-weight: 700;
+}
+.btn-filled-gold:hover {
+  box-shadow: var(--shadow-gold);
+  filter: brightness(1.1);
+}
+
+/* ── Input ──────────────────────────────────────────────────────────────────── */
+.input-noir {
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 2px;
+  color: var(--noir-text);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  padding: 0.6rem 1rem;
+  width: 100%;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.input-noir:focus {
+  border-color: var(--noir-gold);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.input-noir::placeholder {
+  color: var(--noir-text-dim);
+}
+
+/* ── Gold heading ───────────────────────────────────────────────────────────── */
+.heading-gold {
+  font-family: var(--font-display);
+  color: var(--noir-gold);
+  text-shadow: var(--shadow-gold);
+}
+
+.heading-red {
+  font-family: var(--font-display);
+  color: var(--noir-red);
+  text-shadow: var(--shadow-red);
+}
+
+/* ── Neon text flicker ──────────────────────────────────────────────────────── */
+.neon-flicker {
+  animation: flicker 4s infinite;
+}
+
+@keyframes flicker {
+  0%,
+  95%,
+  100% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.6;
+  }
+  97% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 0.4;
+  }
+  99% {
+    opacity: 1;
+  }
+}
+
+/* ── Role badge colors ──────────────────────────────────────────────────────── */
+.role-mafia {
+  color: var(--noir-red);
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.6);
+}
+.role-doctor {
+  color: #00ff88;
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
+.role-detective {
+  color: var(--noir-neon-blue);
+  text-shadow: var(--shadow-blue);
+}
+.role-citizen {
+  color: var(--noir-text);
+}
+
+/* ── Spotlight effect on active player ─────────────────────────────────────── */
+.spotlight {
+  box-shadow:
+    0 0 0 2px var(--noir-gold),
+    var(--shadow-gold);
+  transform: scale(1.04);
+  transition: all var(--transition-med);
+}
+
+/* ── Vote highlight ─────────────────────────────────────────────────────────── */
+.vote-highlight {
+  outline: 2px solid var(--noir-red);
+  outline-offset: 3px;
+  box-shadow: var(--shadow-red);
+}
+
+/* ── Phase overlay ──────────────────────────────────────────────────────────── */
+.phase-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* ── Spectator badge ────────────────────────────────────────────────────────── */
+.spectator-badge {
+  display: inline-block;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid var(--noir-gold);
+  color: var(--noir-gold);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Typewriter text ────────────────────────────────────────────────────────── */
+.typewriter-text {
+  font-family: var(--font-typewriter);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--noir-text);
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────────── */
+.divider-gold {
+  border: none;
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+  margin: 1rem 0;
+}
+
+/* ── Dead player style ──────────────────────────────────────────────────────── */
+.player-dead {
+  opacity: 0.35;
+  filter: grayscale(100%);
+}
+
+/* ── Utility ────────────────────────────────────────────────────────────────── */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.z-0 {
+  z-index: 0;
+}
+.z-10 {
+  z-index: 10;
+}
+.z-20 {
+  z-index: 20;
+}
+.z-50 {
+  z-index: 50;
+}
+.z-100 {
+  z-index: 100;
+}
+.relative {
+  position: relative;
+}
+.absolute {
+  position: absolute;
+}
+.fixed {
+  position: fixed;
+}
+.inset-0 {
+  inset: 0;
+}
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.gap-1 {
+  gap: 0.25rem;
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-3 {
+  gap: 0.75rem;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.w-full {
+  width: 100%;
+}
+.h-full {
+  height: 100%;
+}
+.min-h-screen {
+  min-height: 100dvh;
+}
+.p-2 {
+  padding: 0.5rem;
+}
+.p-3 {
+  padding: 0.75rem;
+}
+.p-4 {
+  padding: 1rem;
+}
+.p-6 {
+  padding: 1.5rem;
+}
+.p-8 {
+  padding: 2rem;
+}
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mt-4 {
+  margin-top: 1rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+.text-center {
+  text-align: center;
+}
+.text-sm {
+  font-size: 0.875rem;
+}
+.text-xs {
+  font-size: 0.75rem;
+}
+.text-lg {
+  font-size: 1.125rem;
+}
+.text-xl {
+  font-size: 1.25rem;
+}
+.text-2xl {
+  font-size: 1.5rem;
+}
+.text-3xl {
+  font-size: 1.875rem;
+}
+.text-4xl {
+  font-size: 2.25rem;
+}
+.text-5xl {
+  font-size: 3rem;
+}
+.font-bold {
+  font-weight: 700;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.rounded {
+  border-radius: 4px;
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.overflow-y-auto {
+  overflow-y: auto;
+}
+.pointer-events-none {
+  pointer-events: none;
+}
+
+/* Error toast */
+.error-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(180, 0, 0, 0.95);
+  border: 1px solid var(--noir-red);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  border-radius: 2px;
+  z-index: 9999;
+  box-shadow: var(--shadow-red);
+  max-width: 90vw;
+  text-align: center;
+}
