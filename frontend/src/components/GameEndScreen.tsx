@@ -10,6 +10,8 @@ interface GameEndScreenProps {
   players: import('../types/game').PublicPlayer[];
   myId: string | null;
   onPlayAgain: () => void;
+  onLeave?: () => void;
+  isHost?: boolean;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -26,7 +28,7 @@ const ROLE_COLORS: Record<string, string> = {
   citizen: 'var(--noir-text)',
 };
 
-export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScreenProps) {
+export function GameEndScreen({ data, players, myId, onPlayAgain, onLeave, isHost }: GameEndScreenProps) {
   const isMafiaWin = data.winner === 'mafia';
   const accentColor = isMafiaWin ? 'var(--noir-red)' : 'var(--noir-gold)';
   const accentShadow = isMafiaWin ? 'var(--shadow-red)' : 'var(--shadow-gold)';
@@ -131,9 +133,8 @@ export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScree
                     gap: '0.3rem',
                     padding: '0.6rem',
                     background: 'rgba(20,20,20,0.9)',
-                    border: `1px solid ${
-                      isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.12)'
-                    }`,
+                    border: `1px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.12)'
+                      }`,
                     borderRadius: 4,
                     boxShadow: isMe ? 'var(--shadow-gold)' : 'none',
                   }}
@@ -171,16 +172,33 @@ export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScree
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-center">
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            className="btn-noir btn-filled-gold"
-            style={{ fontSize: '0.85rem', padding: '0.8rem 2rem' }}
-            onClick={onPlayAgain}
-          >
-            ↻ PLAY AGAIN
-          </motion.button>
+        <div className="flex gap-3 justify-center" style={{ flexWrap: 'wrap' }}>
+          {isHost ? (
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="btn-noir btn-filled-gold"
+              style={{ fontSize: '0.85rem', padding: '0.8rem 2rem' }}
+              onClick={onPlayAgain}
+            >
+              ↻ PLAY AGAIN
+            </motion.button>
+          ) : (
+            <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.8rem', fontStyle: 'italic', padding: '0.8rem 0' }}>
+              Waiting for host to start a new round...
+            </p>
+          )}
+          {onLeave && (
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="btn-noir btn-red"
+              style={{ fontSize: '0.75rem', padding: '0.6rem 1.5rem' }}
+              onClick={onLeave}
+            >
+              ✕ LEAVE ROOM
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>

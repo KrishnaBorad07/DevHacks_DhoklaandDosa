@@ -25,10 +25,10 @@ interface RoomProps {
 
 // Role emojis and labels
 const ROLE_INFO: Record<string, { icon: string; label: string; color: string }> = {
-  mafia:     { icon: '🕶️', label: 'Gangster', color: 'var(--noir-red)' },
-  doctor:    { icon: '💉', label: 'Doctor',   color: '#00ff88' },
+  mafia: { icon: '🕶️', label: 'Gangster', color: 'var(--noir-red)' },
+  doctor: { icon: '💉', label: 'Doctor', color: '#00ff88' },
   detective: { icon: '🕵️', label: 'Detective', color: 'var(--noir-neon-blue)' },
-  citizen:   { icon: '👤', label: 'Citizen',  color: 'var(--noir-text)' },
+  citizen: { icon: '👤', label: 'Citizen', color: 'var(--noir-text)' },
 };
 
 // Timer display hook
@@ -50,6 +50,8 @@ export function Room({ api }: RoomProps) {
     sendChat,
     leaveRoom,
     attemptReconnect,
+    skipDiscussion,
+    playAgain,
   } = api;
 
   const {
@@ -72,8 +74,8 @@ export function Room({ api }: RoomProps) {
     if (started && myRole) {
       setShowRoleReveal(true);
     }
-  // Only re-run when `started` changes (false → true on game start)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only re-run when `started` changes (false → true on game start)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
   const myPlayer = players.find((p) => p.id === myId);
@@ -154,7 +156,9 @@ export function Room({ api }: RoomProps) {
           data={gameEnd}
           players={players}
           myId={myId}
-          onPlayAgain={handleLeave}
+          onPlayAgain={() => roomCode && playAgain(roomCode)}
+          onLeave={handleLeave}
+          isHost={isHost}
         />
       )}
 
@@ -198,9 +202,9 @@ export function Room({ api }: RoomProps) {
             color: phase === 'night' ? '#00d4ff' : phase === 'vote' ? 'var(--noir-red)' : 'var(--noir-gold)',
           }}>
             {phase === 'lobby' ? 'Lobby' :
-             phase === 'night' ? '🌙 Night' :
-             phase === 'day' ? '☀️ Day' :
-             phase === 'vote' ? '⚖️ Vote' : '🏁 Ended'}
+              phase === 'night' ? '🌙 Night' :
+                phase === 'day' ? '☀️ Day' :
+                  phase === 'vote' ? '⚖️ Vote' : '🏁 Ended'}
           </p>
         </div>
 
@@ -382,11 +386,31 @@ export function Room({ api }: RoomProps) {
               <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.75rem', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
                 {players.filter((p) => p.alive).length} players alive
               </p>
-              <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.75rem' }}>
-                {phase === 'night' && '🌙 Night Phase'}
-                {phase === 'day'   && '☀️ Discussion'}
-                {phase === 'vote'  && '⚖️ Voting'}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.75rem' }}>
+                  {phase === 'night' && '🌙 Night Phase'}
+                  {phase === 'day' && '☀️ Discussion'}
+                  {phase === 'vote' && '⚖️ Voting'}
+                </p>
+                {phase === 'day' && isHost && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="btn-noir"
+                    style={{
+                      fontSize: '0.6rem',
+                      padding: '0.25rem 0.6rem',
+                      color: 'var(--noir-gold)',
+                      border: '1px solid rgba(255,215,0,0.4)',
+                      cursor: 'pointer',
+                      letterSpacing: '0.06em',
+                    }}
+                    onClick={() => roomCode && skipDiscussion(roomCode)}
+                  >
+                    ⏭ SKIP TO VOTE
+                  </motion.button>
+                )}
+              </div>
             </div>
 
             {/* Round table */}
@@ -499,6 +523,8 @@ export function Room({ api }: RoomProps) {
                   alive={isAlive}
                   onVote={handleVote}
                   phase={phase}
+                  isHost={isHost}
+                  onSkipDiscussion={() => roomCode && skipDiscussion(roomCode)}
                 />
               </div>
             )}

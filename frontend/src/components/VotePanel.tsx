@@ -13,9 +13,11 @@ interface VotePanelProps {
   alive: boolean;
   onVote: (targetId: string) => void;
   phase: string;
+  isHost?: boolean;
+  onSkipDiscussion?: () => void;
 }
 
-export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phase }: VotePanelProps) {
+export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phase, isHost, onSkipDiscussion }: VotePanelProps) {
   const myVote = myId ? votes[myId] : null;
   const alivePlayers = players.filter((p) => p.alive);
   const totalVotes = Object.keys(votes).length;
@@ -49,9 +51,35 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
       </div>
 
       {phase === 'day' && (
-        <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.78rem', marginBottom: '0.75rem', fontStyle: 'italic' }}>
-          Discuss freely. Voting begins soon...
-        </p>
+        <div style={{ marginBottom: '0.75rem' }}>
+          <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.78rem', fontStyle: 'italic', marginBottom: isHost ? '0.75rem' : 0 }}>
+            Discuss freely. Voting begins soon...
+          </p>
+          {isHost && onSkipDiscussion && (
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={onSkipDiscussion}
+              style={{
+                width: '100%',
+                padding: '0.65rem 1rem',
+                background: 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,180,0,0.08))',
+                border: '1px solid rgba(255,215,0,0.5)',
+                borderRadius: 4,
+                color: 'var(--noir-gold)',
+                fontFamily: 'var(--font-display)',
+                fontSize: '0.8rem',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                textShadow: '0 0 8px rgba(255,215,0,0.4)',
+                boxShadow: '0 0 12px rgba(255,215,0,0.15)',
+              }}
+            >
+              ⏭ SKIP TO VOTE
+            </motion.button>
+          )}
+        </div>
       )}
 
       <div
@@ -92,13 +120,12 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
                   background: isTargeted
                     ? 'rgba(200,0,0,0.15)'
                     : 'rgba(20,20,20,0.8)',
-                  border: `1px solid ${
-                    isTargeted
+                  border: `1px solid ${isTargeted
                       ? 'var(--noir-red)'
                       : hasMaxVotes
-                      ? 'rgba(255,215,0,0.5)'
-                      : 'rgba(255,215,0,0.1)'
-                  }`,
+                        ? 'rgba(255,215,0,0.5)'
+                        : 'rgba(255,215,0,0.1)'
+                    }`,
                   borderRadius: 4,
                   cursor:
                     alive && !isSelf && phase === 'vote'
@@ -107,8 +134,8 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
                   boxShadow: isTargeted
                     ? 'var(--shadow-red)'
                     : hasMaxVotes
-                    ? '0 0 10px rgba(255,215,0,0.25)'
-                    : 'none',
+                      ? '0 0 10px rgba(255,215,0,0.25)'
+                      : 'none',
                   transition: 'all 200ms',
                 }}
                 onClick={() => {
