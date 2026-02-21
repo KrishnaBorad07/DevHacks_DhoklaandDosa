@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useGameState } from './hooks/useGameState';
 import { Lobby } from './components/Lobby';
 import { Room } from './components/Room';
+import { LandingPage } from './components/LandingPage';
+import { HowToPlay } from './components/HowToPlay';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
@@ -33,22 +35,48 @@ function App() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 min-h-screen">
-        <Routes>
-          <Route path="/" element={<Lobby api={gameStateApi} />} />
-          <Route
-            path="/room/:code"
-            element={
-              state.roomCode ? (
-                <Room api={gameStateApi} />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* Landing page — app entry point */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* How to play rules page */}
+        <Route path="/how-to-play" element={<HowToPlay />} />
+
+        {/* Lobby — moved from "/" to "/play" */}
+        <Route
+          path="/play"
+          element={
+            <>
+              <div className="city-bg" />
+              <div className="rain-bg" />
+              <div className="relative z-10 min-h-screen">
+                <Lobby api={gameStateApi} />
+              </div>
+            </>
+          }
+        />
+
+        {/* Game room */}
+        <Route
+          path="/room/:code"
+          element={
+            state.roomCode ? (
+              <>
+                <div className="city-bg" />
+                <div className="rain-bg" />
+                <div className="relative z-10 min-h-screen">
+                  <Room api={gameStateApi} />
+                </div>
+              </>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
