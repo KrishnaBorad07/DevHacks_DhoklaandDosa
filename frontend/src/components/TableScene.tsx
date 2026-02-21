@@ -14,6 +14,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Html, OrbitControls, Sky, Stars, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import type { Phase, PublicPlayer, Role } from '../types/game';
 
 interface TableSceneProps {
@@ -1119,6 +1120,9 @@ function RPMAvatarModel({
 }) {
   const { scene } = useGLTF(url);
   const modelRef = useRef<THREE.Group>(null);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+  const prevTimeRef = useRef(0);
+
   const normalizedModel = useMemo(() => {
     const model = cloneSkeleton(scene) as THREE.Object3D;
     const initialBox = new THREE.Box3().setFromObject(model);
@@ -1135,8 +1139,73 @@ function RPMAvatarModel({
     model.position.z -= fittedCenter.z;
     model.position.y -= fittedBox.min.y;
 
+    // Log bone names once so we can verify the skeleton
+    const boneNames: string[] = [];
+    model.traverse((obj) => { if ((obj as THREE.Bone).isBone) boneNames.push(obj.name); });
+    console.log('[TableScene] Bones:', boneNames.sort());
+
     return model;
   }, [scene]);
+
+  // ── Load idle.fbx and start AnimationMixer ────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const mixer = new THREE.AnimationMixer(normalizedModel);
+    mixerRef.current = mixer;
+    prevTimeRef.current = 0;
+
+    new FBXLoader().load(
+      '/animations/idle.fbx',
+      (fbx) => {
+        if (cancelled) return;
+        const clip = fbx.animations[0];
+        if (!clip) { console.warn('[TableScene] idle.fbx has no animation clips'); return; }
+        console.log('[TableScene] idle.fbx loaded, clips:', fbx.animations.length);
+
+        // Build avatar bone set
+        const avatarBones = new Set<string>();
+        normalizedModel.traverse((o) => { if ((o as THREE.Bone).isBone) avatarBones.add(o.name); });
+
+        // Remap tracks: handles mixamorig:BoneName → BoneName (or no change if already matching)
+        // Also SKIP .position tracks — Mixamo uses cm, THREE.js uses meters, causes 100x position offset
+        const remappedTracks = clip.tracks
+          .filter((track) => !track.name.endsWith('.position')) // ← skip root motion / hip position
+          .map((track) => {
+            const dot = track.name.indexOf('.');
+            if (dot === -1) return track;
+            const bonePart = track.name.slice(0, dot);
+            const propPart = track.name.slice(dot);
+
+            if (avatarBones.has(bonePart)) return track; // direct match
+
+            // Strip mixamorig / mixamorig: prefix
+            const bare = bonePart.replace(/^mixamorig:?/i, '');
+            if (avatarBones.has(bare)) {
+              const Ctor = track.constructor as new (n: string, t: ArrayLike<number>, v: ArrayLike<number>) => THREE.KeyframeTrack;
+              return new Ctor(bare + propPart, track.times, track.values);
+            }
+            // Try adding prefix
+            const prefixed = 'mixamorig' + bare;
+            if (avatarBones.has(prefixed)) {
+              const Ctor = track.constructor as new (n: string, t: ArrayLike<number>, v: ArrayLike<number>) => THREE.KeyframeTrack;
+              return new Ctor(prefixed + propPart, track.times, track.values);
+            }
+            return track; // no match, THREE will silently skip
+          });
+
+
+        const remapped = new THREE.AnimationClip(clip.name, clip.duration, remappedTracks as THREE.KeyframeTrack[]);
+        const action = mixer.clipAction(remapped);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.play();
+        console.log('[TableScene] idle animation started');
+      },
+      undefined,
+      (err) => { console.warn('[TableScene] idle.fbx 404/error:', err); }
+    );
+
+    return () => { cancelled = true; mixer.stopAllAction(); mixerRef.current = null; };
+  }, [normalizedModel]);
 
   useEffect(() => {
     normalizedModel.traverse((child) => {
@@ -1155,6 +1224,11 @@ function RPMAvatarModel({
   useFrame((state) => {
     const root = modelRef.current;
     if (!root) return;
+    const dt = state.clock.elapsedTime - prevTimeRef.current;
+    prevTimeRef.current = state.clock.elapsedTime;
+    // Advance idle mixer (only for alive players)
+    if (mixerRef.current && alive) mixerRef.current.update(dt);
+    // Keep existing gentle bob
     const idleHeight = 0.01;
     const bob = alive ? 0.017 : 0.006;
     root.position.y = idleHeight + Math.sin(state.clock.elapsedTime * 1.35 + bobSeed) * bob;
