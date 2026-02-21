@@ -3,7 +3,7 @@
 // =============================================================================
 import { useEffect, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
 import type { PublicPlayer } from '../types/game';
 
 interface TableSceneProps {
@@ -136,13 +136,7 @@ export const TableScene = memo(function TableScene({
         const ay = cy + avatarR * Math.sin(angle);
         const isMe = player.id === myId;
         const hasVotes = (voteTally[player.id] ?? 0) > 0;
-        const svgStr = renderAvatarSVG(
-          player.avatar.head,
-          player.avatar.body,
-          player.avatar.accessory,
-          player.avatar.colors,
-          56
-        );
+
 
         return (
           <motion.div
@@ -198,19 +192,22 @@ export const TableScene = memo(function TableScene({
                 }}
               />
             )}
-            {/* Avatar rendering */}
-            <div
-              dangerouslySetInnerHTML={{ __html: svgStr }}
-              style={{
-                width: 56,
-                height: 56,
-                filter: !player.alive
-                  ? 'grayscale(1) brightness(0.4)'
-                  : !player.connected
-                  ? 'grayscale(0.5) brightness(0.7)'
-                  : undefined,
-              }}
-            />
+            {/* Avatar rendering — headshot or initials */}
+            {(() => {
+              const hs = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
+              const filt = !player.alive ? 'grayscale(1) brightness(0.4)' : !player.connected ? 'grayscale(0.5) brightness(0.7)' : undefined;
+              return hs ? (
+                <img
+                  src={hs}
+                  alt={player.name}
+                  style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', filter: filt, border: `2px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.2)'}`, background: '#111' }}
+                />
+              ) : (
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: getAvatarColor(player.name), display: 'flex', alignItems: 'center', justifyContent: 'center', filter: filt, border: `2px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.2)'}` }}>
+                  <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '1.1rem' }}>{getInitials(player.name)}</span>
+                </div>
+              );
+            })()}
             {/* Name tag */}
             <div
               style={{
