@@ -4,7 +4,7 @@
 // =============================================================================
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getAvatarId, getAvatarColor, getInitials } from '../lib/avatarUtils';
 import type { CutscenePayload, CutsceneVariant } from '../types/game';
 
 interface CutscenePlayerProps {
@@ -74,9 +74,10 @@ export function CutscenePlayer({ cutscene, onComplete }: CutscenePlayerProps) {
   const steps = STEPS[variant];
   const config = SCENE_CONFIGS[variant];
 
-  const victimSVG = victimAvatar
-    ? renderAvatarSVG(victimAvatar.head, victimAvatar.body, victimAvatar.accessory, victimAvatar.colors, 80)
-    : null;
+  // Build victim avatar display: headshot if RPM url available, else initials circle
+  const victimHeadshotUrl = victimAvatar?.url ? `https://models.readyplayer.me/${getAvatarId(victimAvatar.url)}.png` : '';
+  const victimColor = getAvatarColor(victimName ?? 'X');
+  const victimInitials = getInitials(victimName ?? '??');
 
   useEffect(() => {
     setStepIndex(0);
@@ -260,22 +261,28 @@ export function CutscenePlayer({ cutscene, onComplete }: CutscenePlayerProps) {
           )}
         </AnimatePresence>
 
-        {/* Victim */}
-        {victimSVG && (
-          <motion.div
-            animate={{
-              y: victimDead ? 40 : 0,
-              rotate: victimDead ? 90 : 0,
-              opacity: victimDead ? 0.4 : 1,
-              filter: victimDead
-                ? 'grayscale(100%) brightness(0.5)'
-                : 'none',
-            }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            style={{ width: 80, height: 100, flexShrink: 0 }}
-            dangerouslySetInnerHTML={{ __html: victimSVG }}
-          />
-        )}
+        {/* Victim — headshot circle or initials */}
+        <motion.div
+          animate={{
+            y: victimDead ? 40 : 0,
+            rotate: victimDead ? 90 : 0,
+            opacity: victimDead ? 0.4 : 1,
+          }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          style={{ width: 80, height: 80, flexShrink: 0, filter: victimDead ? 'grayscale(100%) brightness(0.5)' : undefined }}
+        >
+          {victimHeadshotUrl ? (
+            <img
+              src={victimHeadshotUrl}
+              alt={victimName ?? 'victim'}
+              style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,215,0,0.3)' }}
+            />
+          ) : (
+            <div style={{ width: 80, height: 80, borderRadius: '50%', background: victimColor, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,215,0,0.3)' }}>
+              <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '1.6rem' }}>{victimInitials}</span>
+            </div>
+          )}
+        </motion.div>
 
         {/* Doctor silhouette (if saved) */}
         <AnimatePresence>

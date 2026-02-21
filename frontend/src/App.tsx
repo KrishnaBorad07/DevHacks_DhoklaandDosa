@@ -7,12 +7,17 @@ import { AnimatePresence, motion } from 'framer-motion';
 function App() {
   const gameStateApi = useGameState();
   const { state } = gameStateApi;
+  const showNoirBackdrop = !state.roomCode || state.phase === 'lobby';
 
   return (
     <BrowserRouter>
-      {/* Fixed noir background */}
-      <div className="city-bg" />
-      <div className="rain-bg" />
+      {/* Keep noir backdrop for lobby; gameplay uses immersive 3D scene */}
+      {showNoirBackdrop && (
+        <>
+          <div className="city-bg" />
+          <div className="rain-bg" />
+        </>
+      )}
 
       {/* Global error toast */}
       <AnimatePresence>

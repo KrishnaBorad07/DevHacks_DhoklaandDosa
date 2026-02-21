@@ -3,7 +3,7 @@
 // =============================================================================
 import { motion } from 'framer-motion';
 import type { GameEndPayload } from '../types/game';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
 
 interface GameEndScreenProps {
   data: GameEndPayload;
@@ -116,9 +116,7 @@ export function GameEndScreen({ data, players, myId, onPlayAgain, onLeave, isHos
           >
             {data.roles.map((roleEntry, i) => {
               const pub = playerMap.get(roleEntry.id);
-              const svg = pub
-                ? renderAvatarSVG(pub.avatar.head, pub.avatar.body, pub.avatar.accessory, pub.avatar.colors, 56)
-                : '';
+              const headshotUrl = pub?.avatar?.url ? getHeadshotUrl(pub.avatar.url) : '';
               const isMe = roleEntry.id === myId;
               return (
                 <motion.div
@@ -139,11 +137,36 @@ export function GameEndScreen({ data, players, myId, onPlayAgain, onLeave, isHos
                     boxShadow: isMe ? 'var(--shadow-gold)' : 'none',
                   }}
                 >
-                  {svg && (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: svg }}
-                      style={{ width: 56, height: 56 }}
+                  {headshotUrl ? (
+                    <img
+                      src={headshotUrl}
+                      alt={roleEntry.name}
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: `1px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.25)'}`,
+                        background: '#111',
+                      }}
                     />
+                  ) : (
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: getAvatarColor(pub?.name ?? roleEntry.name),
+                        border: `1px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.25)'}`,
+                      }}
+                    >
+                      <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.95rem' }}>
+                        {getInitials(pub?.name ?? roleEntry.name)}
+                      </span>
+                    </div>
                   )}
                   <p
                     style={{

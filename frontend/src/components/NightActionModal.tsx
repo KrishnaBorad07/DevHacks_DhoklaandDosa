@@ -2,7 +2,7 @@
 // components/NightActionModal.tsx – Role-specific night action UI
 // =============================================================================
 import { motion, AnimatePresence } from 'framer-motion';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
 import type { PublicPlayer, Role } from '../types/game';
 
 interface NightActionModalProps {
@@ -41,6 +41,30 @@ const ROLE_CONFIG: Record<
   },
 };
 
+function PlayerAvatar({ player, size = 48 }: { player: PublicPlayer; size?: number }) {
+  const hs = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
+  if (hs) {
+    return (
+      <img
+        src={hs}
+        alt={player.name}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+      />
+    );
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: getAvatarColor(player.name),
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    }}>
+      <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: size * 0.35 }}>
+        {getInitials(player.name)}
+      </span>
+    </div>
+  );
+}
+
 export function NightActionModal({
   myRole,
   myId,
@@ -76,7 +100,6 @@ export function NightActionModal({
   const config = ROLE_CONFIG[myRole as 'mafia' | 'doctor' | 'detective'];
   if (!config) return null;
 
-  // Filter valid targets (all alive except for mafia who can't target self)
   const validTargets = players.filter((p) => {
     if (!p.alive) return false;
     if (myRole === 'mafia' && p.id === myId) return false;
@@ -93,22 +116,16 @@ export function NightActionModal({
           maxWidth: 440,
           margin: '0 auto',
           overflow: 'hidden',
-          border: `1px solid ${
-            myRole === 'mafia' ? 'var(--noir-red)' : 'var(--noir-gold)'
-          }`,
+          border: `1px solid ${myRole === 'mafia' ? 'var(--noir-red)' : 'var(--noir-gold)'}`,
           boxShadow: myRole === 'mafia' ? 'var(--shadow-red)' : 'var(--shadow-gold)',
         }}
       >
         {/* Header bar */}
         <div
           style={{
-            background: myRole === 'mafia'
-              ? 'rgba(200,0,0,0.2)'
-              : 'rgba(255,215,0,0.1)',
+            background: myRole === 'mafia' ? 'rgba(200,0,0,0.2)' : 'rgba(255,215,0,0.1)',
             padding: '0.75rem 1.25rem',
-            borderBottom: `1px solid ${
-              myRole === 'mafia' ? 'rgba(255,0,0,0.3)' : 'rgba(255,215,0,0.2)'
-            }`,
+            borderBottom: `1px solid ${myRole === 'mafia' ? 'rgba(255,0,0,0.3)' : 'rgba(255,215,0,0.2)'}`,
           }}
         >
           <h3
@@ -128,80 +145,50 @@ export function NightActionModal({
 
         {/* Player list */}
         <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: 320, overflowY: 'auto' }}>
-          {validTargets.map((player) => {
-            const svg = renderAvatarSVG(
-              player.avatar.head,
-              player.avatar.body,
-              player.avatar.accessory,
-              player.avatar.colors,
-              48
-            );
-            return (
-              <motion.button
-                key={player.id}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onSubmit(roomCode, config.action, player.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  padding: '0.5rem 0.75rem',
-                  background: 'rgba(26,26,26,0.8)',
-                  border: '1px solid rgba(255,215,0,0.12)',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 150ms',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor =
-                    myRole === 'mafia' ? 'var(--noir-red)' : 'var(--noir-gold)';
-                  e.currentTarget.style.background = 'rgba(40,30,20,0.9)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255,215,0,0.12)';
-                  e.currentTarget.style.background = 'rgba(26,26,26,0.8)';
-                }}
-              >
-                <div
-                  dangerouslySetInnerHTML={{ __html: svg }}
-                  style={{ width: 48, height: 48, flexShrink: 0 }}
-                />
-                <div>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: '0.8rem',
-                      color: 'var(--noir-text)',
-                      letterSpacing: '0.06em',
-                    }}
-                  >
-                    {player.name}
-                    {player.id === myId && (
-                      <span style={{ color: 'var(--noir-gold)', marginLeft: '0.4rem', fontSize: '0.65rem' }}>
-                        (you)
-                      </span>
-                    )}
-                  </p>
-                  {!player.connected && (
-                    <p style={{ fontSize: '0.65rem', color: 'var(--noir-red)' }}>
-                      disconnected
-                    </p>
+          {validTargets.map((player) => (
+            <motion.button
+              key={player.id}
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onSubmit(roomCode, config.action, player.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '0.5rem 0.75rem',
+                background: 'rgba(26,26,26,0.8)',
+                border: '1px solid rgba(255,215,0,0.12)',
+                borderRadius: 2,
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 150ms',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = myRole === 'mafia' ? 'var(--noir-red)' : 'var(--noir-gold)';
+                e.currentTarget.style.background = 'rgba(40,30,20,0.9)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,215,0,0.12)';
+                e.currentTarget.style.background = 'rgba(26,26,26,0.8)';
+              }}
+            >
+              <PlayerAvatar player={player} size={48} />
+              <div>
+                <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', color: 'var(--noir-text)', letterSpacing: '0.06em' }}>
+                  {player.name}
+                  {player.id === myId && (
+                    <span style={{ color: 'var(--noir-gold)', marginLeft: '0.4rem', fontSize: '0.65rem' }}>(you)</span>
                   )}
-                </div>
-                <span
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: '1.2rem',
-                    opacity: 0.5,
-                  }}
-                >
-                  {config.icon}
-                </span>
-              </motion.button>
-            );
-          })}
+                </p>
+                {!player.connected && (
+                  <p style={{ fontSize: '0.65rem', color: 'var(--noir-red)' }}>disconnected</p>
+                )}
+              </div>
+              <span style={{ marginLeft: 'auto', fontSize: '1.2rem', opacity: 0.5 }}>
+                {config.icon}
+              </span>
+            </motion.button>
+          ))}
         </div>
       </motion.div>
     </AnimatePresence>

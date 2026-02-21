@@ -14,7 +14,7 @@ import { NightActionModal } from './NightActionModal';
 import { VotePanel } from './VotePanel';
 import { GameEndScreen } from './GameEndScreen';
 import { RoleRevealScreen } from './RoleRevealScreen';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
 import type { useGameState } from '../hooks/useGameState';
 
 type GameStateApi = ReturnType<typeof useGameState>;
@@ -115,9 +115,7 @@ export function Room({ api }: RoomProps) {
   // Phase timer display (countdown from timer prop; note: real-time tick is client-side approximation)
   const roleInfo = myRole ? ROLE_INFO[myRole] : null;
 
-  const avatarSvg = myPlayer
-    ? renderAvatarSVG(myPlayer.avatar.head, myPlayer.avatar.body, myPlayer.avatar.accessory, myPlayer.avatar.colors, 40)
-    : '';
+  const headshotUrl = myPlayer?.avatar?.url ? getHeadshotUrl(myPlayer.avatar.url) : '';
 
   return (
     <div
@@ -211,7 +209,11 @@ export function Room({ api }: RoomProps) {
         {/* My role + avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {myPlayer && (
-            <div dangerouslySetInnerHTML={{ __html: avatarSvg }} style={{ width: 40, height: 40 }} />
+            headshotUrl
+              ? <img src={headshotUrl} alt="avatar" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,215,0,0.3)' }} />
+              : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(myPlayer.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', color: '#fff' }}>{getInitials(myPlayer.name)}</span>
+                </div>
           )}
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.7rem', color: 'var(--noir-gold)' }}>
@@ -268,24 +270,21 @@ export function Room({ api }: RoomProps) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
               {players.map((player, i) => {
-                const svg = renderAvatarSVG(player.avatar.head, player.avatar.body, player.avatar.accessory, player.avatar.colors, 40);
+                  const playerHeadshot = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
                 return (
                   <motion.div
                     key={player.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.06 }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.5rem 0.75rem',
-                      background: 'rgba(26,26,26,0.9)',
-                      border: `1px solid ${player.id === myId ? 'rgba(255,215,0,0.4)' : 'rgba(255,215,0,0.1)'}`,
-                      borderRadius: 3,
-                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(26,26,26,0.9)', border: `1px solid ${player.id === myId ? 'rgba(255,215,0,0.4)' : 'rgba(255,215,0,0.1)'}`, borderRadius: 3 }}
                   >
-                    <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width: 40, height: 40 }} />
+                    {playerHeadshot
+                      ? <img src={playerHeadshot} alt={player.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                      : <div style={{ width: 40, height: 40, borderRadius: '50%', background: getAvatarColor(player.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.85rem' }}>{getInitials(player.name)}</span>
+                        </div>
+                    }
                     <div style={{ flex: 1 }}>
                       <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.78rem', color: 'var(--noir-gold)' }}>
                         {player.name}
@@ -354,11 +353,11 @@ export function Room({ api }: RoomProps) {
           style={{
             flex: 1,
             display: 'grid',
-            gridTemplateColumns: '1fr minmax(0, 440px)',
+            gridTemplateColumns: 'minmax(0, 1.55fr) minmax(320px, 400px)',
             gridTemplateRows: 'auto 1fr',
             gap: '0.75rem',
             padding: '0.75rem',
-            maxWidth: 1200,
+            maxWidth: 1480,
             width: '100%',
             margin: '0 auto',
           }}
@@ -418,6 +417,7 @@ export function Room({ api }: RoomProps) {
               <TableScene
                 players={players}
                 myId={myId}
+                myRole={myRole}
                 voteTally={voteTally}
                 phase={phase}
                 onPlayerClick={phase === 'vote' && isAlive ? handleVote : undefined}
@@ -473,10 +473,15 @@ export function Room({ api }: RoomProps) {
                 <div className="flex gap-2">
                   {myMafiaTeam.map((m) => {
                     const pub = players.find((p) => p.id === m.id);
-                    const svg = renderAvatarSVG(m.avatar.head, m.avatar.body, m.avatar.accessory, m.avatar.colors, 36);
+                    const memberHeadshot = m.avatar?.url ? getHeadshotUrl(m.avatar.url) : '';
                     return (
                       <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <div dangerouslySetInnerHTML={{ __html: svg }} style={{ width: 36, height: 36 }} />
+                        {memberHeadshot
+                          ? <img src={memberHeadshot} alt={m.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                          : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(m.name), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.8rem' }}>{getInitials(m.name)}</span>
+                            </div>
+                        }
                         <p style={{ fontSize: '0.7rem', color: pub?.alive === false ? 'var(--noir-text-dim)' : 'var(--noir-red)' }}>
                           {m.name} {pub?.alive === false ? '(dead)' : ''}
                         </p>
