@@ -27,7 +27,16 @@ export function Lobby({ api }: LobbyProps) {
   const [avatar, setAvatar] = useState<Avatar>(() => {
     try {
       const saved = localStorage.getItem('wlt_avatar');
-      return saved ? JSON.parse(saved) : DEFAULT_AVATAR;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge with DEFAULT_AVATAR so older saved avatars (missing `colors`) still work
+        return {
+          ...DEFAULT_AVATAR,
+          ...parsed,
+          colors: { ...DEFAULT_AVATAR.colors, ...(parsed.colors ?? {}) },
+        };
+      }
+      return DEFAULT_AVATAR;
     } catch { return DEFAULT_AVATAR; }
   });
 
