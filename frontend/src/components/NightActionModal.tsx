@@ -75,6 +75,7 @@ export function NightActionModal({
 }: NightActionModalProps) {
   // Citizens and spectators have no night action
   if (myRole === 'citizen' || submitted) {
+    if (submitted) return null; // No UI after submitting — silently wait
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -82,16 +83,12 @@ export function NightActionModal({
         className="glass-card p-6 text-center"
         style={{ maxWidth: 400, margin: '0 auto' }}
       >
-        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>
-          {submitted ? '✅' : '🌙'}
-        </div>
+        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🌙</div>
         <h3 className="heading-gold" style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>
-          {submitted ? 'Action Submitted' : 'Rest, Citizen'}
+          Rest, Citizen
         </h3>
         <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.82rem' }}>
-          {submitted
-            ? 'Your action has been recorded. Waiting for others...'
-            : 'Only the specialists move in the night. Lie low and wait for dawn.'}
+          Only the specialists move in the night. Lie low and wait for dawn.
         </p>
       </motion.div>
     );
