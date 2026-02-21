@@ -3,13 +3,15 @@
 // =============================================================================
 import { motion } from 'framer-motion';
 import type { GameEndPayload } from '../types/game';
-import { renderAvatarSVG } from '../lib/avatarConfig';
+import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
 
 interface GameEndScreenProps {
   data: GameEndPayload;
   players: import('../types/game').PublicPlayer[];
   myId: string | null;
   onPlayAgain: () => void;
+  onLeave?: () => void;
+  isHost?: boolean;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -26,7 +28,7 @@ const ROLE_COLORS: Record<string, string> = {
   citizen: 'var(--noir-text)',
 };
 
-export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScreenProps) {
+export function GameEndScreen({ data, players, myId, onPlayAgain, onLeave, isHost }: GameEndScreenProps) {
   const isMafiaWin = data.winner === 'mafia';
   const accentColor = isMafiaWin ? 'var(--noir-red)' : 'var(--noir-gold)';
   const accentShadow = isMafiaWin ? 'var(--shadow-red)' : 'var(--shadow-gold)';
@@ -114,9 +116,7 @@ export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScree
           >
             {data.roles.map((roleEntry, i) => {
               const pub = playerMap.get(roleEntry.id);
-              const svg = pub
-                ? renderAvatarSVG(pub.avatar.head, pub.avatar.body, pub.avatar.accessory, pub.avatar.colors, 56)
-                : '';
+              const headshotUrl = pub?.avatar?.url ? getHeadshotUrl(pub.avatar.url) : '';
               const isMe = roleEntry.id === myId;
               return (
                 <motion.div
@@ -131,18 +131,42 @@ export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScree
                     gap: '0.3rem',
                     padding: '0.6rem',
                     background: 'rgba(20,20,20,0.9)',
-                    border: `1px solid ${
-                      isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.12)'
-                    }`,
+                    border: `1px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.12)'
+                      }`,
                     borderRadius: 4,
                     boxShadow: isMe ? 'var(--shadow-gold)' : 'none',
                   }}
                 >
-                  {svg && (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: svg }}
-                      style={{ width: 56, height: 56 }}
+                  {headshotUrl ? (
+                    <img
+                      src={headshotUrl}
+                      alt={roleEntry.name}
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: `1px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.25)'}`,
+                        background: '#111',
+                      }}
                     />
+                  ) : (
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: getAvatarColor(pub?.name ?? roleEntry.name),
+                        border: `1px solid ${isMe ? 'var(--noir-gold)' : 'rgba(255,215,0,0.25)'}`,
+                      }}
+                    >
+                      <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.95rem' }}>
+                        {getInitials(pub?.name ?? roleEntry.name)}
+                      </span>
+                    </div>
                   )}
                   <p
                     style={{
@@ -171,16 +195,33 @@ export function GameEndScreen({ data, players, myId, onPlayAgain }: GameEndScree
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-center">
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            className="btn-noir btn-filled-gold"
-            style={{ fontSize: '0.85rem', padding: '0.8rem 2rem' }}
-            onClick={onPlayAgain}
-          >
-            ↻ PLAY AGAIN
-          </motion.button>
+        <div className="flex gap-3 justify-center" style={{ flexWrap: 'wrap' }}>
+          {isHost ? (
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="btn-noir btn-filled-gold"
+              style={{ fontSize: '0.85rem', padding: '0.8rem 2rem' }}
+              onClick={onPlayAgain}
+            >
+              ↻ PLAY AGAIN
+            </motion.button>
+          ) : (
+            <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.8rem', fontStyle: 'italic', padding: '0.8rem 0' }}>
+              Waiting for host to start a new round...
+            </p>
+          )}
+          {onLeave && (
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              className="btn-noir btn-red"
+              style={{ fontSize: '0.75rem', padding: '0.6rem 1.5rem' }}
+              onClick={onLeave}
+            >
+              ✕ LEAVE ROOM
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>

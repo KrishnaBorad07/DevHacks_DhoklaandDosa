@@ -81,6 +81,8 @@ export interface Room {
   nightActionsSubmitted: Set<string>;
   /** Whether the game has started */
   started: boolean;
+  /** ISO timestamp of when the game started (for Supabase insert at end) */
+  gameStartedAt?: string;
 }
 
 /** Payload sent to clients when a room is updated */

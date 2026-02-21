@@ -219,6 +219,29 @@ export function useGameState() {
       }
     );
 
+    // ── Room reset (play again) ─────────────────────────────────────────────
+    socket.on('room_reset', (data: { code: string; players: PublicPlayer[] }) => {
+      setState((s) => ({
+        ...s,
+        phase: 'lobby',
+        round: 0,
+        started: false,
+        myRole: null,
+        myMafiaTeam: [],
+        players: data.players,
+        gameEnd: null,
+        cutscene: null,
+        narratorText: null,
+        narratorOutcome: null,
+        votes: {},
+        voteTally: {},
+        messages: [],
+        detectiveResults: [],
+        nightActionSubmitted: false,
+        error: null,
+      }));
+    });
+
     // ── Errors ───────────────────────────────────────────────────────────────
     socket.on('error', (data: { message: string }) => {
       setState((s) => ({ ...s, error: data.message }));
@@ -239,6 +262,7 @@ export function useGameState() {
       socket.off('chat');
       socket.off('game_ended');
       socket.off('reconnected');
+      socket.off('room_reset');
       socket.off('error');
     };
   }, [socket]);
@@ -304,6 +328,20 @@ export function useGameState() {
     [socket]
   );
 
+  const skipDiscussion = useCallback(
+    (code: string) => {
+      socket.emit('skip_discussion', { code });
+    },
+    [socket]
+  );
+
+  const playAgain = useCallback(
+    (code: string) => {
+      socket.emit('play_again', { code });
+    },
+    [socket]
+  );
+
   return {
     state,
     clearError,
@@ -317,5 +355,7 @@ export function useGameState() {
     sendChat,
     attemptReconnect,
     leaveRoom,
+    skipDiscussion,
+    playAgain,
   };
 }

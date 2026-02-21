@@ -10,41 +10,41 @@ export interface AvatarPartOption {
 
 /** 10 head styles */
 export const HEADS: AvatarPartOption[] = [
-  { id: 0, label: 'Round',     emoji: '😐' },
-  { id: 1, label: 'Square',    emoji: '🧱' },
-  { id: 2, label: 'Slim',      emoji: '🪦' },
-  { id: 3, label: 'Wide',      emoji: '🟫' },
-  { id: 4, label: 'Oval',      emoji: '🥚' },
-  { id: 5, label: 'Angular',   emoji: '💎' },
-  { id: 6, label: 'Heavy',     emoji: '🎭' },
-  { id: 7, label: 'Thin',      emoji: '🎪' },
-  { id: 8, label: 'Rugged',    emoji: '🏔️' },
-  { id: 9, label: 'Sharp',     emoji: '⚔️' },
+  { id: 0, label: 'Round', emoji: '😐' },
+  { id: 1, label: 'Square', emoji: '🧱' },
+  { id: 2, label: 'Slim', emoji: '🪦' },
+  { id: 3, label: 'Wide', emoji: '🟫' },
+  { id: 4, label: 'Oval', emoji: '🥚' },
+  { id: 5, label: 'Angular', emoji: '💎' },
+  { id: 6, label: 'Heavy', emoji: '🎭' },
+  { id: 7, label: 'Thin', emoji: '🎪' },
+  { id: 8, label: 'Rugged', emoji: '🏔️' },
+  { id: 9, label: 'Sharp', emoji: '⚔️' },
 ];
 
 /** 8 body styles */
 export const BODIES: AvatarPartOption[] = [
-  { id: 0, label: 'Suit',         emoji: '🤵' },
-  { id: 1, label: 'Trench Coat',  emoji: '🧥' },
-  { id: 2, label: 'Vest',         emoji: '🦺' },
-  { id: 3, label: 'Pinstripe',    emoji: '👔' },
-  { id: 4, label: 'Leather',      emoji: '🥋' },
-  { id: 5, label: 'Overcoat',     emoji: '🧣' },
-  { id: 6, label: 'Gangster',     emoji: '💼' },
-  { id: 7, label: 'Casual',       emoji: '👕' },
+  { id: 0, label: 'Suit', emoji: '🤵' },
+  { id: 1, label: 'Trench Coat', emoji: '🧥' },
+  { id: 2, label: 'Vest', emoji: '🦺' },
+  { id: 3, label: 'Pinstripe', emoji: '👔' },
+  { id: 4, label: 'Leather', emoji: '🥋' },
+  { id: 5, label: 'Overcoat', emoji: '🧣' },
+  { id: 6, label: 'Gangster', emoji: '💼' },
+  { id: 7, label: 'Casual', emoji: '👕' },
 ];
 
 /** 10 accessories */
 export const ACCESSORIES: AvatarPartOption[] = [
-  { id: 0, label: 'Fedora',       emoji: '🎩' },
-  { id: 1, label: 'Sunglasses',   emoji: '🕶️' },
-  { id: 2, label: 'Cigar',        emoji: '🚬' },
-  { id: 3, label: 'Gold Chain',   emoji: '📿' },
-  { id: 4, label: 'Scar',         emoji: '⚡' },
-  { id: 5, label: 'Eye Patch',    emoji: '🏴‍☠️' },
-  { id: 6, label: 'Bow Tie',      emoji: '🎀' },
-  { id: 7, label: 'Bandana',      emoji: '🧢' },
-  { id: 8, label: 'Gun Holster',  emoji: '🔫' },
+  { id: 0, label: 'Fedora', emoji: '🎩' },
+  { id: 1, label: 'Sunglasses', emoji: '🕶️' },
+  { id: 2, label: 'Cigar', emoji: '🚬' },
+  { id: 3, label: 'Gold Chain', emoji: '📿' },
+  { id: 4, label: 'Scar', emoji: '⚡' },
+  { id: 5, label: 'Eye Patch', emoji: '🏴‍☠️' },
+  { id: 6, label: 'Bow Tie', emoji: '🎀' },
+  { id: 7, label: 'Bandana', emoji: '🧢' },
+  { id: 8, label: 'Gun Holster', emoji: '🔫' },
   { id: 9, label: 'Pocket Watch', emoji: '⌚' },
 ];
 
@@ -90,13 +90,14 @@ export function renderAvatarSVG(
   head: number,
   body: number,
   accessory: number,
-  colors: Record<string, string>,
+  colors: Record<string, string> | undefined | null,
   size = 80
 ): string {
-  const skin = colors.skin || '#8b7355';
-  const hair = colors.hair || '#1a1a1a';
-  const outfit = colors.outfit || '#1a1a1a';
-  const accent = colors.accent || '#ffd700';
+  const c = colors ?? {};
+  const skin = c.skin || '#8b7355';
+  const hair = c.hair || '#1a1a1a';
+  const outfit = c.outfit || '#1a1a1a';
+  const accent = c.accent || '#ffd700';
 
   // Face width/height modifiers per head type
   const faceW = [36, 40, 30, 44, 34, 38, 42, 28, 38, 32][head] ?? 36;

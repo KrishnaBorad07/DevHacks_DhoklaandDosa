@@ -8,6 +8,7 @@
 // BEFORE the 'disconnect' event fires, so adapter iteration is unreliable).
 // =============================================================================
 
+import 'dotenv/config'; // ← load .env before anything else
 import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
@@ -39,6 +40,7 @@ import {
   VOTE_DURATION_MS,
 } from './gameLogic.js';
 import { getNarratorText } from './narrator.js';
+import { supabase } from './supabase.js';
 import type {
   Avatar,
   PublicPlayer,
@@ -345,6 +347,92 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
       : 'The townspeople win! Justice prevails... for now.'
   );
   touchRoom(code);
+
+  console.log(`[endGame] Triggered for room=${code} winner=${winner}`);
+  console.log(`[endGame] Players in room: ${room.players.size}`);
+
+  // ── Persist result to Supabase ──────────────────────────────────────────────
+  const endedAt = new Date().toISOString();
+  supabase
+    .from('game_sessions')
+    .insert({
+      room_code: code,
+      winner,
+      total_rounds: room.round,
+      total_players: room.players.size,
+      started_at: room.gameStartedAt ?? endedAt,
+      ended_at: endedAt,
+    })
+    .then(({ error }) => {
+      if (error) {
+        console.error('[Supabase] CRITICAL: insert game_sessions failed:', error.message);
+      } else {
+        console.log(`[Supabase] SUCCESS: game_sessions saved ✓`);
+      }
+    });
+
+  // ── Upsert player scores ───────────────────────────────────────────────────
+  for (const player of room.players.values()) {
+    const isWinnerSide =
+      (winner === 'mafia' && player.role === 'mafia') ||
+      (winner === 'town' && player.role !== 'mafia');
+    const scoreGain = isWinnerSide ? (winner === 'mafia' ? 10 : 5) : 0;
+
+    console.log(`[endGame] Processing score for ${player.name}: role=${player.role} win=${isWinnerSide} gain=${scoreGain}`);
+
+    // Check if player already exists by name (now the primary key)
+    supabase
+      .from('player_scores')
+      .select('player_name, total_score, games_won, games_played')
+      .eq('player_name', player.name)
+      .maybeSingle()
+      .then(async ({ data: existing, error: selectErr }) => {
+        if (selectErr) {
+          console.error(`[Supabase] player_scores select for ${player.name}:`, selectErr.message);
+          return;
+        }
+
+        console.log(`[Supabase] Player check: ${player.name} exists=${!!existing}`);
+
+        if (existing) {
+          // Update existing player — increment values
+          const { error: updateErr } = await supabase
+            .from('player_scores')
+            .update({
+              total_score: (existing.total_score || 0) + scoreGain,
+              games_won: (existing.games_won || 0) + (isWinnerSide ? 1 : 0),
+              games_played: (existing.games_played || 0) + 1,
+              last_room_code: code,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('player_name', player.name);
+
+          if (updateErr) {
+            console.error(`[Supabase] player_scores update for ${player.name}:`, updateErr.message);
+          } else {
+            console.log(`[Supabase] leaderboard updated ✓ ${player.name} +${scoreGain}pts`);
+          }
+        } else {
+          // Insert new player into leaderboard
+          const { error: insertErr } = await supabase
+            .from('player_scores')
+            .insert({
+              player_name: player.name,
+              total_score: scoreGain,
+              games_won: isWinnerSide ? 1 : 0,
+              games_played: 1,
+              last_room_code: code,
+              updated_at: new Date().toISOString(),
+            });
+
+          if (insertErr) {
+            console.error(`[Supabase] player_scores insert for ${player.name}:`, insertErr.message);
+          } else {
+            console.log(`[Supabase] leaderboard created ✓ ${player.name} ${scoreGain}pts`);
+          }
+        }
+      });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -480,6 +568,9 @@ io.on('connection', (socket: Socket) => {
       });
     }
 
+    // Record game start time (used for Supabase insert when game ends)
+    room.gameStartedAt = new Date().toISOString();
+
     touchRoom(data.code);
     console.log(`[Game] Started in room ${data.code} with ${playerIds.length} players`);
 
@@ -563,6 +654,62 @@ io.on('connection', (socket: Socket) => {
       if (room.timer) clearTimeout(room.timer);
       resolveVotePhase(data.code);
     }
+  });
+
+  // ── SKIP DISCUSSION (host only) ───────────────────────────────────────────
+  socket.on('skip_discussion', (data: { code: string }) => {
+    const room = getRoom(data.code);
+    if (!room) return socket.emit('error', { message: 'Room not found.' });
+    if (room.hostId !== socket.id) return socket.emit('error', { message: 'Only the host can skip discussion.' });
+    if (room.phase !== 'day') return socket.emit('error', { message: 'Can only skip during discussion phase.' });
+
+    // Clear the day-discussion timer and jump straight to vote
+    if (room.timer) clearTimeout(room.timer);
+    systemMessage(data.code, 'Host skipped discussion — voting begins now!');
+    startVotePhase(data.code);
+  });
+
+  // ── PLAY AGAIN (host only) ────────────────────────────────────────────────
+  socket.on('play_again', (data: { code: string }) => {
+    const room = getRoom(data.code);
+    if (!room) return socket.emit('error', { message: 'Room not found.' });
+    if (room.hostId !== socket.id) return socket.emit('error', { message: 'Only the host can restart.' });
+    if (room.phase !== 'ended') return socket.emit('error', { message: 'Game is still in progress.' });
+
+    // Reset room state to lobby
+    room.phase = 'lobby';
+    room.round = 0;
+    room.started = false;
+    room.mafiaVotes = [];
+    room.doctorSave = null;
+    room.detectiveTarget = null;
+    room.votes = new Map();
+    room.nightActionsSubmitted = new Set();
+    room.gameStartedAt = undefined;
+    if (room.timer) clearTimeout(room.timer);
+    room.timer = null;
+
+    // Reset all players
+    for (const player of room.players.values()) {
+      player.alive = true;
+      player.role = 'citizen'; // Reset role — will be reassigned on next start
+      player.connected = true;
+      player.disconnectedAt = null;
+      player.chatCount = 0;
+      player.chatWindowStart = Date.now();
+    }
+
+    touchRoom(data.code);
+
+    // Notify all clients
+    io.to(data.code).emit('room_reset', {
+      code: data.code,
+      players: toPublicPlayers(room, room.hostId),
+    });
+
+    broadcastRoomUpdate(data.code);
+    systemMessage(data.code, 'The host started a new round! Waiting for players...');
+    console.log(`[Room] Play again in ${data.code} — back to lobby`);
   });
 
   // ── CHAT ───────────────────────────────────────────────────────────────────

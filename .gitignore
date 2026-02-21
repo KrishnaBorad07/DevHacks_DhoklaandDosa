@@ -5,6 +5,10 @@ npm-debug.log*
 # Dependencies
 node_modules/
 
+# Vite cache
+.vite/
+**/node_modules/.vite/
+
 # Build output
 dist/
 build/

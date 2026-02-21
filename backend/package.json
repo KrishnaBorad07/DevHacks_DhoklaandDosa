@@ -9,7 +9,9 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "express": "^4.21.2",
     "socket.io": "^4.8.1",
     "uuid": "^11.1.0"
