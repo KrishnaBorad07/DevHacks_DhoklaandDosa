@@ -348,6 +348,9 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
   );
   touchRoom(code);
 
+  console.log(`[endGame] Triggered for room=${code} winner=${winner}`);
+  console.log(`[endGame] Players in room: ${room.players.size}`);
+
   // ── Persist result to Supabase ──────────────────────────────────────────────
   const endedAt = new Date().toISOString();
   supabase
@@ -362,9 +365,9 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
     })
     .then(({ error }) => {
       if (error) {
-        console.error('[Supabase] insert game_sessions failed:', error.message);
+        console.error('[Supabase] CRITICAL: insert game_sessions failed:', error.message);
       } else {
-        console.log(`[Supabase] game saved ✓  room=${code}  winner=${winner}  rounds=${room.round}`);
+        console.log(`[Supabase] SUCCESS: game_sessions saved ✓`);
       }
     });
 
@@ -375,10 +378,12 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
       (winner === 'town' && player.role !== 'mafia');
     const scoreGain = isWinnerSide ? (winner === 'mafia' ? 10 : 5) : 0;
 
-    // Check if player already exists
+    console.log(`[endGame] Processing score for ${player.name}: role=${player.role} win=${isWinnerSide} gain=${scoreGain}`);
+
+    // Check if player already exists by name (now the primary key)
     supabase
       .from('player_scores')
-      .select('id, total_score, games_won, games_played')
+      .select('player_name, total_score, games_won, games_played')
       .eq('player_name', player.name)
       .maybeSingle()
       .then(async ({ data: existing, error: selectErr }) => {
@@ -387,25 +392,28 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
           return;
         }
 
+        console.log(`[Supabase] Player check: ${player.name} exists=${!!existing}`);
+
         if (existing) {
           // Update existing player — increment values
           const { error: updateErr } = await supabase
             .from('player_scores')
             .update({
-              total_score: existing.total_score + scoreGain,
-              games_won: existing.games_won + (isWinnerSide ? 1 : 0),
-              games_played: existing.games_played + 1,
+              total_score: (existing.total_score || 0) + scoreGain,
+              games_won: (existing.games_won || 0) + (isWinnerSide ? 1 : 0),
+              games_played: (existing.games_played || 0) + 1,
+              last_room_code: code,
               updated_at: new Date().toISOString(),
             })
-            .eq('id', existing.id);
+            .eq('player_name', player.name);
 
           if (updateErr) {
             console.error(`[Supabase] player_scores update for ${player.name}:`, updateErr.message);
           } else {
-            console.log(`[Supabase] score updated ✓  ${player.name}  +${scoreGain}pts  (total: ${existing.total_score + scoreGain})`);
+            console.log(`[Supabase] leaderboard updated ✓ ${player.name} +${scoreGain}pts`);
           }
         } else {
-          // Insert new player
+          // Insert new player into leaderboard
           const { error: insertErr } = await supabase
             .from('player_scores')
             .insert({
@@ -413,13 +421,14 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
               total_score: scoreGain,
               games_won: isWinnerSide ? 1 : 0,
               games_played: 1,
+              last_room_code: code,
               updated_at: new Date().toISOString(),
             });
 
           if (insertErr) {
             console.error(`[Supabase] player_scores insert for ${player.name}:`, insertErr.message);
           } else {
-            console.log(`[Supabase] score created ✓  ${player.name}  ${scoreGain}pts`);
+            console.log(`[Supabase] leaderboard created ✓ ${player.name} ${scoreGain}pts`);
           }
         }
       });

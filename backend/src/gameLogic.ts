@@ -159,9 +159,6 @@ export interface LynchResult {
  * among all alive voters. On tie → no elimination.
  */
 export function resolveDayVote(room: Room): LynchResult {
-  const alivePlayers = getAlivePlayers(room);
-  const aliveCount = alivePlayers.length;
-
   const tally: Record<string, number> = {};
   for (const [, targetId] of room.votes) {
     tally[targetId] = (tally[targetId] ?? 0) + 1;
@@ -181,8 +178,10 @@ export function resolveDayVote(room: Room): LynchResult {
     }
   }
 
-  // Require strict majority (> half of alive players)
-  if (!topCandidate || isTied || topCount <= Math.floor(aliveCount / 2)) {
+  // Plurality logic:
+  // 1. Must have at least one vote cast
+  // 2. Must not be a tie for the top spot
+  if (!topCandidate || isTied || topCount === 0) {
     return { lynchedPlayerId: null };
   }
 
