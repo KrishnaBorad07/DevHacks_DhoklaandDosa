@@ -49,7 +49,7 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
 
   const formatTime = (ts: number) => {
     const d = new Date(ts);
-    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
   return (
@@ -58,7 +58,6 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
       style={{
         height: '100%',
         minHeight: 300,
-        maxHeight: 420,
       }}
     >
       {/* Header tabs */}
@@ -104,13 +103,12 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               style={{
-                borderLeft: `2px solid ${
-                  msg.senderId === 'system'
-                    ? 'rgba(255,215,0,0.3)'
-                    : msg.channel === 'mafia'
+                borderLeft: `2px solid ${msg.senderId === 'system'
+                  ? 'rgba(255,215,0,0.3)'
+                  : msg.channel === 'mafia'
                     ? 'var(--noir-red)'
                     : 'rgba(255,215,0,0.2)'
-                }`,
+                  }`,
                 paddingLeft: '0.5rem',
                 opacity: msg.senderId === 'system' ? 0.7 : 1,
               }}
@@ -120,7 +118,7 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
                   <span
                     style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: '0.65rem',
+                      fontSize: '0.85rem',
                       color: msg.senderId === myId ? 'var(--noir-gold)' : '#c0a060',
                       letterSpacing: '0.08em',
                     }}
@@ -134,7 +132,7 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
               )}
               <p
                 style={{
-                  fontSize: '0.8rem',
+                  fontSize: '1.05rem',
                   color: msg.senderId === 'system'
                     ? 'var(--noir-text-dim)'
                     : 'var(--noir-text)',

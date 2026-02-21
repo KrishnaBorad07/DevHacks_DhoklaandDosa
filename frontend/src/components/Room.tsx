@@ -107,6 +107,34 @@ export function Room({ api }: RoomProps) {
     [submitNightAction]
   );
 
+  const [copied, setCopied] = useState(false);
+
+  const copyRoomCode = () => {
+    if (!roomCode) return;
+    navigator.clipboard.writeText(roomCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  // Leaderboard shown in lobby after Play Again
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3001';
+  interface LbEntry { player_name: string; total_score: number; games_won: number; games_played: number; }
+  const [lobbyLeaderboard, setLobbyLeaderboard] = useState<LbEntry[] | null>(null);
+  const [lbRoomCode, setLbRoomCode] = useState<string | null>(null);
+
+  const handlePlayAgain = () => {
+    if (!roomCode) return;
+    const code = roomCode;
+    playAgain(code);
+    // Fetch leaderboard for this room so it shows in the lobby while waiting
+    setTimeout(() => {
+      fetch(`${BACKEND_URL}/leaderboard?room=${encodeURIComponent(code)}`)
+        .then((r) => r.json())
+        .then((data) => { setLobbyLeaderboard(data); setLbRoomCode(code); })
+        .catch(() => { });
+    }, 1500);
+  };
+
   const handleLeave = () => {
     if (roomCode) leaveRoom(roomCode);
     navigate('/');
@@ -154,7 +182,8 @@ export function Room({ api }: RoomProps) {
           data={gameEnd}
           players={players}
           myId={myId}
-          onPlayAgain={() => roomCode && playAgain(roomCode)}
+          roomCode={roomCode ?? ''}
+          onPlayAgain={handlePlayAgain}
           onLeave={handleLeave}
           isHost={isHost}
         />
@@ -178,13 +207,33 @@ export function Room({ api }: RoomProps) {
         }}
       >
         {/* Room code */}
-        <div>
-          <p style={{ fontSize: '0.6rem', color: 'var(--noir-text-dim)', letterSpacing: '0.15em', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
-            Room Code
-          </p>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', letterSpacing: '0.25em', color: 'var(--noir-gold)', textShadow: 'var(--shadow-gold)' }}>
-            {roomCode}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div>
+            <p style={{ fontSize: '0.6rem', color: 'var(--noir-text-dim)', letterSpacing: '0.15em', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+              Room Code
+            </p>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', letterSpacing: '0.25em', color: 'var(--noir-gold)', textShadow: 'var(--shadow-gold)' }}>
+              {roomCode}
+            </p>
+          </div>
+          <button
+            onClick={copyRoomCode}
+            title="Copy room code"
+            style={{
+              background: copied ? 'rgba(0,255,136,0.12)' : 'rgba(255,215,0,0.08)',
+              border: `1px solid ${copied ? 'rgba(0,255,136,0.5)' : 'rgba(255,215,0,0.25)'}`,
+              borderRadius: 4,
+              color: copied ? '#00ff88' : 'var(--noir-gold)',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              padding: '0.25rem 0.5rem',
+              transition: 'all 200ms',
+              lineHeight: 1,
+              marginTop: 2,
+            }}
+          >
+            {copied ? '✓' : '⎘'}
+          </button>
         </div>
 
         {/* Phase indicator */}
@@ -212,8 +261,8 @@ export function Room({ api }: RoomProps) {
             headshotUrl
               ? <img src={headshotUrl} alt="avatar" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,215,0,0.3)' }} />
               : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(myPlayer.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', color: '#fff' }}>{getInitials(myPlayer.name)}</span>
-                </div>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.8rem', color: '#fff' }}>{getInitials(myPlayer.name)}</span>
+              </div>
           )}
           <div style={{ textAlign: 'right' }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.7rem', color: 'var(--noir-gold)' }}>
@@ -251,26 +300,30 @@ export function Room({ api }: RoomProps) {
           style={{
             flex: 1,
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            alignItems: 'stretch',
             justifyContent: 'center',
-            padding: '2rem 1rem',
-            gap: '1.5rem',
+            padding: '2rem 1.5rem',
+            gap: '1.25rem',
+            maxWidth: 1100,
+            width: '100%',
+            margin: '0 auto',
+            boxSizing: 'border-box',
           }}
         >
+          {/* LEFT: Roster */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             className="glass-card"
-            style={{ width: '100%', maxWidth: 520, padding: '1.5rem' }}
+            style={{ flex: '0 0 420px', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}
           >
             <h2 className="heading-gold text-center" style={{ fontSize: '1.1rem', marginBottom: '1.25rem', letterSpacing: '0.12em' }}>
               👥 SYNDICATE ROSTER
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', marginBottom: '1.25rem' }}>
               {players.map((player, i) => {
-                  const playerHeadshot = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
+                const playerHeadshot = player.avatar?.url ? getHeadshotUrl(player.avatar.url) : '';
                 return (
                   <motion.div
                     key={player.id}
@@ -282,8 +335,8 @@ export function Room({ api }: RoomProps) {
                     {playerHeadshot
                       ? <img src={playerHeadshot} alt={player.name} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                       : <div style={{ width: 40, height: 40, borderRadius: '50%', background: getAvatarColor(player.name), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.85rem' }}>{getInitials(player.name)}</span>
-                        </div>
+                        <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.85rem' }}>{getInitials(player.name)}</span>
+                      </div>
                     }
                     <div style={{ flex: 1 }}>
                       <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.78rem', color: 'var(--noir-gold)' }}>
@@ -332,8 +385,47 @@ export function Room({ api }: RoomProps) {
             </div>
           </motion.div>
 
-          {/* Lobby chat */}
-          <div style={{ width: '100%', maxWidth: 520 }}>
+          {/* RIGHT: Leaderboard (after play again) + Chat */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          >
+            {/* Leaderboard panel — only shows after Play Again */}
+            {lobbyLeaderboard && lobbyLeaderboard.length > 0 && (
+              <div className="glass-card" style={{ padding: '1rem', flexShrink: 0 }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--noir-gold)', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '0.75rem', textAlign: 'center' }}>
+                  🏆 {lbRoomCode} &mdash; Last Game Leaderboard
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                  {/* Header — fixed, then scrollable rows */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.5rem 1fr 3.5rem 3rem 3.5rem', gap: '0.4rem', padding: '0 0.5rem 0.4rem', borderBottom: '1px solid rgba(255,215,0,0.15)' }}>
+                    {['', 'Player', 'Score', 'Won', 'Games'].map((h) => (
+                      <span key={h} style={{ fontSize: '0.55rem', color: 'var(--noir-text-dim)', letterSpacing: '0.1em', fontFamily: 'var(--font-display)', textTransform: 'uppercase', textAlign: h === '' ? 'left' : 'right' }}>{h}</span>
+                    ))}
+                  </div>
+                  <div style={{ maxHeight: '13rem', overflowY: 'auto' }}>
+                    {lobbyLeaderboard.map((entry, idx) => {
+                      const medals = ['🥇', '🥈', '🥉'];
+                      const myName = players.find((p) => p.id === myId)?.name ?? '';
+                      const isMe = myName && entry.player_name.toLowerCase() === myName.toLowerCase();
+                      return (
+                        <div key={entry.player_name + idx} style={{ display: 'grid', gridTemplateColumns: '1.5rem 1fr 3.5rem 3rem 3.5rem', gap: '0.4rem', alignItems: 'center', padding: '0.3rem 0.5rem', borderRadius: 3, background: isMe ? 'rgba(255,215,0,0.07)' : idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', border: isMe ? '1px solid rgba(255,215,0,0.25)' : '1px solid transparent' }}>
+                          <span style={{ fontSize: '0.85rem', textAlign: 'center' }}>{medals[idx] ?? `${idx + 1}`}</span>
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.78rem', color: isMe ? 'var(--noir-gold)' : 'var(--noir-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {entry.player_name}{isMe && <span style={{ color: 'var(--noir-text-dim)', fontSize: '0.6rem', marginLeft: 4 }}>(you)</span>}
+                          </span>
+                          <span style={{ fontSize: '0.82rem', color: 'var(--noir-gold)', fontWeight: 700, textAlign: 'right' }}>{entry.total_score}</span>
+                          <span style={{ fontSize: '0.78rem', color: '#00ff88', textAlign: 'right' }}>{entry.games_won}</span>
+                          <span style={{ fontSize: '0.78rem', color: 'var(--noir-text-dim)', textAlign: 'right' }}>{entry.games_played}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Chat
               messages={messages}
               myId={myId}
@@ -343,7 +435,7 @@ export function Room({ api }: RoomProps) {
               onSend={sendChat}
               aliveMafiaCount={0}
             />
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -479,8 +571,8 @@ export function Room({ api }: RoomProps) {
                         {memberHeadshot
                           ? <img src={memberHeadshot} alt={m.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
                           : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(m.name), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.8rem' }}>{getInitials(m.name)}</span>
-                            </div>
+                            <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.8rem' }}>{getInitials(m.name)}</span>
+                          </div>
                         }
                         <p style={{ fontSize: '0.7rem', color: pub?.alive === false ? 'var(--noir-text-dim)' : 'var(--noir-red)' }}>
                           {m.name} {pub?.alive === false ? '(dead)' : ''}
