@@ -115,8 +115,8 @@ export function NarratorBox({ text, outcome, onDone }: NarratorBoxProps) {
   // Outcome accent color
   const outcomeBorderColor
     = outcome === 'killed' ? 'var(--noir-red)'
-    : outcome === 'saved'  ? '#00ff88'
-    : 'var(--noir-gold)';
+      : outcome === 'saved' ? '#00ff88'
+        : 'var(--noir-gold)';
 
   return (
     <AnimatePresence>
@@ -128,9 +128,9 @@ export function NarratorBox({ text, outcome, onDone }: NarratorBoxProps) {
           transition={{ type: 'spring', damping: 20, stiffness: 200 }}
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
-            gap: '1rem',
-            maxWidth: '100%',
+            alignItems: 'center',
+            gap: '1.5rem',
+            width: '100%',
           }}
         >
           {/* Narrator figure */}
