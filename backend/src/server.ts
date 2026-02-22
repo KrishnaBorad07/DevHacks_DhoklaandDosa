@@ -75,6 +75,22 @@ app.use(express.json());
 // Updated on join/create and cleared on leave/disconnect.
 const socketToRoom = new Map<string, string>();
 
+// ── WebRTC audio channel membership ─────────────────────────────────────────
+// Per room-code: which socket IDs are in each audio channel.
+const rtcChannels = new Map<string, { general: Set<string>; mafia: Set<string> }>();
+
+function ensureRtcRoom(code: string) {
+  if (!rtcChannels.has(code)) rtcChannels.set(code, { general: new Set(), mafia: new Set() });
+  return rtcChannels.get(code)!;
+}
+
+function rtcRemoveSocket(socketId: string, code: string) {
+  const ch = rtcChannels.get(code);
+  if (!ch) return;
+  ch.general.delete(socketId);
+  ch.mafia.delete(socketId);
+}
+
 // Health check endpoint
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
@@ -599,8 +615,19 @@ io.on('connection', (socket: Socket) => {
         case 'kill': {
           if (player.role !== 'mafia') return socket.emit('error', { message: 'Only mafia can kill.' });
           if (data.targetId === socket.id) return socket.emit('error', { message: 'Cannot target yourself.' });
-          room.mafiaVotes.push({ voterId: socket.id, targetId: data.targetId });
-          break;
+          // ── FIRST MAFIA KILL = IMMEDIATE resolve ───────────────────────────
+          // Only one mafia vote needed; the first to pick triggers the night.
+          if (room.mafiaVotes.length === 0) {
+            room.mafiaVotes.push({ voterId: socket.id, targetId: data.targetId });
+            room.nightActionsSubmitted.add(socket.id);
+            touchRoom(data.code);
+            // Lock out other mafias instantly
+            if (room.timer) clearTimeout(room.timer);
+            resolveNightPhase(data.code);
+            return; // skip the common nightActionsSubmitted.add below
+          }
+          // Already resolved — duplicate submission, ignore
+          return;
         }
         case 'save': {
           if (player.role !== 'doctor') return socket.emit('error', { message: 'Only doctor can save.' });
@@ -765,7 +792,7 @@ io.on('connection', (socket: Socket) => {
       };
 
       if (data.channel === 'mafia') {
-        // Only send to mafia players
+        // Send to: alive mafia + eliminated mafia (spectators can watch)
         for (const p of room.players.values()) {
           if (p.role === 'mafia') {
             io.sockets.sockets.get(p.id)?.emit('chat', msg);
@@ -835,19 +862,89 @@ io.on('connection', (socket: Socket) => {
   // ── LEAVE ROOM ─────────────────────────────────────────────────────────────
   socket.on('leave_room', (data: { code: string }) => {
     socketToRoom.delete(socket.id);
-    handleDisconnect(socket, data.code, true);
   });
 
-  // ── DISCONNECT ─────────────────────────────────────────────────────────────
-  // NOTE: We use socketToRoom (not adapter.rooms) because Socket.io removes the
-  // socket from its own adapter rooms BEFORE firing 'disconnect', making adapter
-  // iteration unreliable for finding which WLT room the socket was in.
+  // ── WebRTC SIGNALING ───────────────────────────────────────────────────────
+  // Pure relay — server never touches audio data.
+
+  socket.on('rtc:join', (data: { code: string; channel: 'general' | 'mafia' }) => {
+    console.log(`[RTC] rtc:join received from ${socket.id}, code=${data.code}, channel=${data.channel}`);
+    const room = getRoom(data.code);
+    if (!room) {
+      console.log(`[RTC] ❌ room not found: ${data.code}`);
+      return;
+    }
+    const player = room.players.get(socket.id);
+    if (!player) {
+      console.log(`[RTC] ❌ player not found for socketId=${socket.id} in room ${data.code}. Players:`, [...room.players.keys()]);
+      return;
+    }
+
+    // Enforce mafia-only channel
+    if (data.channel === 'mafia' && player.role !== 'mafia') return;
+
+    const ch = ensureRtcRoom(data.code);
+
+    // Remove from previous channel first
+    ch.general.delete(socket.id);
+    ch.mafia.delete(socket.id);
+
+    const channelSet = data.channel === 'mafia' ? ch.mafia : ch.general;
+
+    // Tell all existing peers in this channel that we joined (they initiate the offer)
+    console.log(`[RTC] Channel '${data.channel}' currently has ${channelSet.size} peer(s)`);
+    for (const peerId of channelSet) {
+      if (peerId === socket.id) continue;
+      io.sockets.sockets.get(peerId)?.emit('rtc:peer-joined', { peerId: socket.id, channel: data.channel });
+      // Also tell us about existing peers so we can display them
+      socket.emit('rtc:peer-exists', { peerId, channel: data.channel });
+    }
+
+    channelSet.add(socket.id);
+    console.log(`[RTC] ✅ ${player.name} joined '${data.channel}' in room ${data.code}, total peers: ${channelSet.size}`);
+  });
+
+  socket.on('rtc:leave', (data: { code: string }) => {
+    const code = data.code;
+    const ch = rtcChannels.get(code);
+    if (!ch) return;
+    ch.general.delete(socket.id);
+    ch.mafia.delete(socket.id);
+    // Notify all peers in this room
+    for (const ch2 of [ch.general, ch.mafia]) {
+      for (const peerId of ch2) {
+        io.sockets.sockets.get(peerId)?.emit('rtc:peer-left', { peerId: socket.id });
+      }
+    }
+  });
+
+  socket.on('rtc:offer', (data: { to: string; offer: object }) => {
+    io.sockets.sockets.get(data.to)?.emit('rtc:offer', { from: socket.id, offer: data.offer });
+  });
+
+  socket.on('rtc:answer', (data: { to: string; answer: object }) => {
+    io.sockets.sockets.get(data.to)?.emit('rtc:answer', { from: socket.id, answer: data.answer });
+  });
+
+  socket.on('rtc:ice', (data: { to: string; candidate: object }) => {
+    io.sockets.sockets.get(data.to)?.emit('rtc:ice', { from: socket.id, candidate: data.candidate });
+  });
+
+  // ── DISCONNECT ────────────────────────────────────────────────────────────
   socket.on('disconnect', (reason) => {
     console.log(`[Socket] Disconnected: ${socket.id} (${reason})`);
     const code = socketToRoom.get(socket.id);
     if (code) {
-      socketToRoom.delete(socket.id);
+      rtcRemoveSocket(socket.id, code);
+      // Notify RTC peers
+      const ch = rtcChannels.get(code);
+      if (ch) {
+        for (const peerId of [...ch.general, ...ch.mafia]) {
+          io.sockets.sockets.get(peerId)?.emit('rtc:peer-left', { peerId: socket.id });
+        }
+      }
       handleDisconnect(socket, code, false);
+      socketToRoom.delete(socket.id);
     }
   });
 });
