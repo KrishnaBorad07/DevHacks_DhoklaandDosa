@@ -172,7 +172,6 @@ export function AvatarPicker({ value, onChange, playerName = 'You' }: AvatarPick
     setShowModal(false);
     setHeadshotLoaded(false);
     setHeadshotError(false);
-    // Try 3D first after a brief delay for the model to be ready
     setTimeout(() => setShow3D(true), 400);
   }, [onChange]);
 
@@ -180,15 +179,69 @@ export function AvatarPicker({ value, onChange, playerName = 'You' }: AvatarPick
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-        <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.65rem', letterSpacing: '0.2em', color: 'var(--noir-text-dim)', textTransform: 'uppercase', textAlign: 'center' }}>
-          🎭 Your Character
-        </p>
+      <style>{`
+        @keyframes avatarRingPulse {
+          0%,100% { box-shadow: 0 0 12px #ff000044, 0 0 30px #ff000022; }
+          50%      { box-shadow: 0 0 22px #ff000088, 0 0 55px #ff000044; }
+        }
+        @keyframes statusPulse {
+          0%,100% { opacity: 1; box-shadow: 0 0 5px #00ff88; }
+          50%      { opacity: 0.5; box-shadow: 0 0 12px #00ff88; }
+        }
+        @keyframes characterFloat {
+          0%,100% { transform: translateY(0); }
+          50%      { transform: translateY(-6px); }
+        }
+        .avatar-ring {
+          border-radius: 50%;
+          animation: avatarRingPulse 3s ease-in-out infinite;
+        }
+        .change-btn {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.22s;
+        }
+        .change-btn::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 55%);
+          pointer-events: none;
+        }
+        .change-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 0 28px rgba(255,0,0,0.5), 0 6px 24px rgba(255,0,0,0.25) !important;
+        }
+        .change-btn:active { transform: translateY(1px); }
+        .view-toggle:hover { color: #FFD700 !important; }
+      `}</style>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.1rem' }}>
+
+        {/* Section label */}
+        <div style={{ textAlign: 'center' }}>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontSize: '0.6rem',
+            letterSpacing: '0.22em', color: 'rgba(255,100,100,0.6)',
+            textTransform: 'uppercase',
+          }}>
+            YOUR CHARACTER
+          </p>
+          <div style={{ width: '60px', height: '1px', background: 'linear-gradient(to right, transparent, rgba(255,0,0,0.4), transparent)', margin: '4px auto 0' }} />
+        </div>
 
         {/* ── Preview ── */}
         {hasAvatar && show3D ? (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            style={{ width: '100%', height: 340, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,215,0,0.2)', background: 'radial-gradient(ellipse at bottom, #0a0a0a, #000)' }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{
+              width: '100%', height: 300, borderRadius: 12, overflow: 'hidden',
+              border: '1px solid rgba(255,0,0,0.25)',
+              background: 'radial-gradient(ellipse at bottom, #0d0505, #000)',
+              boxShadow: '0 0 40px rgba(255,0,0,0.08)',
+              animation: 'characterFloat 4s ease-in-out infinite',
+            }}
           >
             <Canvas camera={{ position: [0, 0.9, 2.4], fov: 42 }} style={{ background: 'transparent' }}>
               <ambientLight intensity={0.7} />
@@ -199,19 +252,18 @@ export function AvatarPicker({ value, onChange, playerName = 'You' }: AvatarPick
               <Environment preset="city" />
             </Canvas>
           </motion.div>
+
         ) : hasAvatar ? (
-          /* Headshot view */
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}
           >
             {!headshotError ? (
-              <div style={{ position: 'relative', width: 140, height: 140 }}>
-                {/* Loading ring while headshot loads */}
+              <div style={{ position: 'relative', width: 148, height: 148 }}>
                 {!headshotLoaded && (
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                    style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(255,215,0,0.15)', borderTopColor: 'var(--noir-gold)' }}
+                    style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(255,215,0,0.12)', borderTopColor: '#FFD700' }}
                   />
                 )}
                 <img
@@ -220,64 +272,97 @@ export function AvatarPicker({ value, onChange, playerName = 'You' }: AvatarPick
                   onLoad={() => setHeadshotLoaded(true)}
                   onError={() => setHeadshotError(true)}
                   style={{
-                    width: 140, height: 140, borderRadius: '50%', objectFit: 'cover',
-                    border: '2px solid rgba(255,215,0,0.4)',
-                    boxShadow: '0 0 20px rgba(255,215,0,0.15)',
+                    width: 148, height: 148, borderRadius: '50%', objectFit: 'cover',
+                    border: '3px solid rgba(255,30,30,0.5)',
+                    boxShadow: '0 0 24px rgba(255,0,0,0.3), 0 0 60px rgba(255,0,0,0.1)',
                     opacity: headshotLoaded ? 1 : 0,
                     transition: 'opacity 0.4s',
                   }}
+                  className="avatar-ring"
                 />
               </div>
             ) : (
-              <InitialsFallback name={playerName} size={120} />
+              <InitialsFallback name={playerName} size={130} />
             )}
           </motion.div>
+
         ) : (
-          /* No avatar yet */
-          <motion.div animate={{ opacity: [0.5, 0.8, 0.5] }} transition={{ repeat: Infinity, duration: 2 }}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 160, gap: '0.5rem' }}
+          /* No avatar placeholder */
+          <motion.div
+            animate={{ opacity: [0.4, 0.75, 0.4] }}
+            transition={{ repeat: Infinity, duration: 2.5 }}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', height: 160, gap: '0.75rem',
+            }}
           >
-            <div style={{ fontSize: '4rem', filter: 'grayscale(1) opacity(0.3)' }}>🕵️</div>
-            <p style={{ color: 'var(--noir-text-dim)', fontSize: '0.72rem', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
+            <div style={{
+              width: 110, height: 110, borderRadius: '50%',
+              border: '2px dashed rgba(255,0,0,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'radial-gradient(circle, rgba(255,0,0,0.05), transparent)',
+            }}>
+              <span style={{ fontSize: '3rem', opacity: 0.35 }}>🕵️</span>
+            </div>
+            <p style={{ color: 'rgba(255,100,100,0.5)', fontSize: '0.7rem', fontFamily: 'var(--font-display)', letterSpacing: '0.12em' }}>
               NO CHARACTER YET
             </p>
           </motion.div>
         )}
 
-        {/* ── Action buttons ── */}
+        {/* ── Change / Create button ── */}
         <motion.button
-          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.96 }}
           onClick={() => setShowModal(true)}
-          className="btn-noir btn-filled-red w-full"
-          style={{ fontSize: '0.75rem', padding: '0.6rem 1rem' }}
+          className="btn-noir btn-filled-red w-full change-btn"
+          style={{
+            fontSize: '1rem',
+            padding: '0.95rem 1rem',
+            letterSpacing: '0.14em',
+            fontWeight: 700,
+            boxShadow: '0 0 20px rgba(255,0,0,0.3)',
+          }}
         >
-          {hasAvatar ? '✏️ CHANGE CHARACTER' : '🎭 CREATE YOUR CHARACTER'}
+          {hasAvatar ? 'CHANGE CHARACTER' : 'CREATE YOUR CHARACTER'}
         </motion.button>
 
+        {/* ── Status + view toggle ── */}
         {hasAvatar && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00ff88', boxShadow: '0 0 6px #00ff88' }} />
-              <p style={{ color: '#00ff88', fontSize: '0.65rem', fontFamily: 'var(--font-display)', letterSpacing: '0.08em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: '#00ff88',
+                animation: 'statusPulse 2s ease-in-out infinite',
+              }} />
+              <p style={{ color: '#00ff88', fontSize: '0.72rem', fontFamily: 'var(--font-display)', letterSpacing: '0.1em' }}>
                 3D CHARACTER READY
               </p>
             </motion.div>
             <button
               onClick={() => setShow3D(!show3D)}
-              style={{ background: 'none', border: 'none', color: 'var(--noir-text-dim)', fontSize: '0.65rem', cursor: 'pointer', letterSpacing: '0.05em', textDecoration: 'underline' }}
+              className="view-toggle"
+              style={{
+                background: 'none', border: 'none',
+                color: 'rgba(255,215,0,0.5)', fontSize: '0.7rem',
+                cursor: 'pointer', letterSpacing: '0.05em',
+                textDecoration: 'underline', transition: 'color 0.2s',
+              }}
             >
               {show3D ? 'Switch to headshot view' : 'Switch to 3D view'}
             </button>
-          </>
+          </div>
         )}
       </div>
 
-      {/* RPM Modal rendered via portal to escape framer-motion transform stacking context */}
+      {/* RPM Modal via portal */}
       {showModal && (
-        <RPMModal
-          onExport={handleExport}
-          onClose={() => setShowModal(false)}
-        />
+        <RPMModal onExport={handleExport} onClose={() => setShowModal(false)} />
       )}
     </>
   );

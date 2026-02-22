@@ -175,7 +175,34 @@ export function useGameState() {
 
     // ── Voting ───────────────────────────────────────────────────────────────
     socket.on('vote_updated', (data: VoteUpdatePayload) => {
-      setState((s) => ({ ...s, votes: data.votes, voteTally: data.tally }));
+      setState((s) => {
+        // Generate chat messages for OTHER players' new votes only
+        // (own vote message is already injected immediately in submitDayVote)
+        const newVoteMsgs: ChatMessage[] = [];
+        for (const [voterId, targetId] of Object.entries(data.votes)) {
+          if (voterId !== s.myId && s.votes[voterId] !== targetId) {
+            const voter = s.players.find((p) => p.id === voterId);
+            const target = s.players.find((p) => p.id === targetId);
+            if (voter && target) {
+              newVoteMsgs.push({
+                senderId: 'vote',
+                senderName: 'Vote',
+                text: `${voter.name} voted for ${target.name}`,
+                channel: 'global',
+                timestamp: Date.now(),
+              });
+            }
+          }
+        }
+        return {
+          ...s,
+          votes: data.votes,
+          voteTally: data.tally,
+          messages: newVoteMsgs.length > 0
+            ? [...s.messages.slice(-200), ...newVoteMsgs]
+            : s.messages,
+        };
+      });
     });
 
     // ── Eliminate ────────────────────────────────────────────────────────────
@@ -301,6 +328,20 @@ export function useGameState() {
   const submitDayVote = useCallback(
     (code: string, targetId: string) => {
       socket.emit('day_vote', { code, targetId });
+      // Inject vote message immediately for the local player
+      setState((s) => {
+        const voter = s.players.find((p) => p.id === s.myId);
+        const target = s.players.find((p) => p.id === targetId);
+        if (!voter || !target) return s;
+        const voteMsg: ChatMessage = {
+          senderId: 'vote',
+          senderName: 'Vote',
+          text: `${voter.name} voted for ${target.name}`,
+          channel: 'global',
+          timestamp: Date.now(),
+        };
+        return { ...s, messages: [...s.messages.slice(-200), voteMsg] };
+      });
     },
     [socket]
   );

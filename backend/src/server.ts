@@ -75,9 +75,49 @@ app.use(express.json());
 // Updated on join/create and cleared on leave/disconnect.
 const socketToRoom = new Map<string, string>();
 
+// ── WebRTC audio channel membership ─────────────────────────────────────────
+// Per room-code: which socket IDs are in each audio channel.
+const rtcChannels = new Map<string, { general: Set<string>; mafia: Set<string> }>();
+
+function ensureRtcRoom(code: string) {
+  if (!rtcChannels.has(code)) rtcChannels.set(code, { general: new Set(), mafia: new Set() });
+  return rtcChannels.get(code)!;
+}
+
+function rtcRemoveSocket(socketId: string, code: string) {
+  const ch = rtcChannels.get(code);
+  if (!ch) return;
+  ch.general.delete(socketId);
+  ch.mafia.delete(socketId);
+}
+
 // Health check endpoint
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+// Leaderboard endpoint – filtered by room code if ?room= param provided
+app.get('/leaderboard', async (req, res) => {
+  const roomCode = req.query.room as string | undefined;
+
+  let query = supabase
+    .from('player_scores')
+    .select('player_name, total_score, games_won, games_played')
+    .order('total_score', { ascending: false })
+    .limit(10);
+
+  if (roomCode) {
+    query = query.eq('last_room_code', roomCode.toUpperCase());
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('[Leaderboard] Supabase error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data ?? []);
 });
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
@@ -322,6 +362,7 @@ function resolveVotePhase(code: string): void {
   room.timer = setTimeout(() => startNightPhase(code), 3_000);
 }
 
+
 /** End the game and broadcast roles */
 function endGame(code: string, winner: 'mafia' | 'town'): void {
   const room = getRoom(code);
@@ -372,51 +413,56 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
     });
 
   // ── Upsert player scores ───────────────────────────────────────────────────
+  // NOTE: We look up by session_id (a stable UUID per browser/device), NOT by
+  // player_name. This ensures two different people named "Deep" in separate
+  // rooms each get their own row, while a player who plays again in the same
+  // room (same sessionId persisted in localStorage) correctly accumulates stats.
   for (const player of room.players.values()) {
     const isWinnerSide =
       (winner === 'mafia' && player.role === 'mafia') ||
       (winner === 'town' && player.role !== 'mafia');
     const scoreGain = isWinnerSide ? (winner === 'mafia' ? 10 : 5) : 0;
 
-    console.log(`[endGame] Processing score for ${player.name}: role=${player.role} win=${isWinnerSide} gain=${scoreGain}`);
+    console.log(`[endGame] Processing score for ${player.name} (session=${player.sessionId}): role=${player.role} win=${isWinnerSide} gain=${scoreGain}`);
 
-    // Check if player already exists by name (now the primary key)
     supabase
       .from('player_scores')
-      .select('player_name, total_score, games_won, games_played')
-      .eq('player_name', player.name)
+      .select('session_id, player_name, total_score, games_won, games_played')
+      .eq('session_id', player.sessionId)
       .maybeSingle()
       .then(async ({ data: existing, error: selectErr }) => {
         if (selectErr) {
-          console.error(`[Supabase] player_scores select for ${player.name}:`, selectErr.message);
+          console.error(`[Supabase] player_scores select for session ${player.sessionId}:`, selectErr.message);
           return;
         }
 
-        console.log(`[Supabase] Player check: ${player.name} exists=${!!existing}`);
+        console.log(`[Supabase] Player check: ${player.name} (session=${player.sessionId}) exists=${!!existing}`);
 
         if (existing) {
-          // Update existing player — increment values
+          // Update existing record — also refresh displayed name in case it changed
           const { error: updateErr } = await supabase
             .from('player_scores')
             .update({
+              player_name: player.name, // keep name up-to-date
               total_score: (existing.total_score || 0) + scoreGain,
               games_won: (existing.games_won || 0) + (isWinnerSide ? 1 : 0),
               games_played: (existing.games_played || 0) + 1,
               last_room_code: code,
               updated_at: new Date().toISOString(),
             })
-            .eq('player_name', player.name);
+            .eq('session_id', player.sessionId);
 
           if (updateErr) {
             console.error(`[Supabase] player_scores update for ${player.name}:`, updateErr.message);
           } else {
-            console.log(`[Supabase] leaderboard updated ✓ ${player.name} +${scoreGain}pts`);
+            console.log(`[Supabase] leaderboard updated ✓ ${player.name} (session=${player.sessionId}) +${scoreGain}pts`);
           }
         } else {
-          // Insert new player into leaderboard
+          // First time this session plays — create a new row
           const { error: insertErr } = await supabase
             .from('player_scores')
             .insert({
+              session_id: player.sessionId,
               player_name: player.name,
               total_score: scoreGain,
               games_won: isWinnerSide ? 1 : 0,
@@ -428,7 +474,7 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
           if (insertErr) {
             console.error(`[Supabase] player_scores insert for ${player.name}:`, insertErr.message);
           } else {
-            console.log(`[Supabase] leaderboard created ✓ ${player.name} ${scoreGain}pts`);
+            console.log(`[Supabase] leaderboard created ✓ ${player.name} (session=${player.sessionId}) ${scoreGain}pts`);
           }
         }
       });
@@ -599,8 +645,11 @@ io.on('connection', (socket: Socket) => {
         case 'kill': {
           if (player.role !== 'mafia') return socket.emit('error', { message: 'Only mafia can kill.' });
           if (data.targetId === socket.id) return socket.emit('error', { message: 'Cannot target yourself.' });
-          room.mafiaVotes.push({ voterId: socket.id, targetId: data.targetId });
-          break;
+          // Store the mafia vote — only the first valid kill vote counts
+          if (room.mafiaVotes.length === 0) {
+            room.mafiaVotes.push({ voterId: socket.id, targetId: data.targetId });
+          }
+          break; // Fall through to register "submitted" and check if ALL roles are done
         }
         case 'save': {
           if (player.role !== 'doctor') return socket.emit('error', { message: 'Only doctor can save.' });
@@ -765,7 +814,7 @@ io.on('connection', (socket: Socket) => {
       };
 
       if (data.channel === 'mafia') {
-        // Only send to mafia players
+        // Send to: alive mafia + eliminated mafia (spectators can watch)
         for (const p of room.players.values()) {
           if (p.role === 'mafia') {
             io.sockets.sockets.get(p.id)?.emit('chat', msg);
@@ -835,19 +884,89 @@ io.on('connection', (socket: Socket) => {
   // ── LEAVE ROOM ─────────────────────────────────────────────────────────────
   socket.on('leave_room', (data: { code: string }) => {
     socketToRoom.delete(socket.id);
-    handleDisconnect(socket, data.code, true);
   });
 
-  // ── DISCONNECT ─────────────────────────────────────────────────────────────
-  // NOTE: We use socketToRoom (not adapter.rooms) because Socket.io removes the
-  // socket from its own adapter rooms BEFORE firing 'disconnect', making adapter
-  // iteration unreliable for finding which WLT room the socket was in.
+  // ── WebRTC SIGNALING ───────────────────────────────────────────────────────
+  // Pure relay — server never touches audio data.
+
+  socket.on('rtc:join', (data: { code: string; channel: 'general' | 'mafia' }) => {
+    console.log(`[RTC] rtc:join received from ${socket.id}, code=${data.code}, channel=${data.channel}`);
+    const room = getRoom(data.code);
+    if (!room) {
+      console.log(`[RTC] ❌ room not found: ${data.code}`);
+      return;
+    }
+    const player = room.players.get(socket.id);
+    if (!player) {
+      console.log(`[RTC] ❌ player not found for socketId=${socket.id} in room ${data.code}. Players:`, [...room.players.keys()]);
+      return;
+    }
+
+    // Enforce mafia-only channel
+    if (data.channel === 'mafia' && player.role !== 'mafia') return;
+
+    const ch = ensureRtcRoom(data.code);
+
+    // Remove from previous channel first
+    ch.general.delete(socket.id);
+    ch.mafia.delete(socket.id);
+
+    const channelSet = data.channel === 'mafia' ? ch.mafia : ch.general;
+
+    // Tell all existing peers in this channel that we joined (they initiate the offer)
+    console.log(`[RTC] Channel '${data.channel}' currently has ${channelSet.size} peer(s)`);
+    for (const peerId of channelSet) {
+      if (peerId === socket.id) continue;
+      io.sockets.sockets.get(peerId)?.emit('rtc:peer-joined', { peerId: socket.id, channel: data.channel });
+      // Also tell us about existing peers so we can display them
+      socket.emit('rtc:peer-exists', { peerId, channel: data.channel });
+    }
+
+    channelSet.add(socket.id);
+    console.log(`[RTC] ✅ ${player.name} joined '${data.channel}' in room ${data.code}, total peers: ${channelSet.size}`);
+  });
+
+  socket.on('rtc:leave', (data: { code: string }) => {
+    const code = data.code;
+    const ch = rtcChannels.get(code);
+    if (!ch) return;
+    ch.general.delete(socket.id);
+    ch.mafia.delete(socket.id);
+    // Notify all peers in this room
+    for (const ch2 of [ch.general, ch.mafia]) {
+      for (const peerId of ch2) {
+        io.sockets.sockets.get(peerId)?.emit('rtc:peer-left', { peerId: socket.id });
+      }
+    }
+  });
+
+  socket.on('rtc:offer', (data: { to: string; offer: object }) => {
+    io.sockets.sockets.get(data.to)?.emit('rtc:offer', { from: socket.id, offer: data.offer });
+  });
+
+  socket.on('rtc:answer', (data: { to: string; answer: object }) => {
+    io.sockets.sockets.get(data.to)?.emit('rtc:answer', { from: socket.id, answer: data.answer });
+  });
+
+  socket.on('rtc:ice', (data: { to: string; candidate: object }) => {
+    io.sockets.sockets.get(data.to)?.emit('rtc:ice', { from: socket.id, candidate: data.candidate });
+  });
+
+  // ── DISCONNECT ────────────────────────────────────────────────────────────
   socket.on('disconnect', (reason) => {
     console.log(`[Socket] Disconnected: ${socket.id} (${reason})`);
     const code = socketToRoom.get(socket.id);
     if (code) {
-      socketToRoom.delete(socket.id);
+      rtcRemoveSocket(socket.id, code);
+      // Notify RTC peers
+      const ch = rtcChannels.get(code);
+      if (ch) {
+        for (const peerId of [...ch.general, ...ch.mafia]) {
+          io.sockets.sockets.get(peerId)?.emit('rtc:peer-left', { peerId: socket.id });
+        }
+      }
       handleDisconnect(socket, code, false);
+      socketToRoom.delete(socket.id);
     }
   });
 });

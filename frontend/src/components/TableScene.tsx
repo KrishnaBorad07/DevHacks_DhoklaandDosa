@@ -14,6 +14,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Html, OrbitControls, Sky, Stars, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import type { Phase, PublicPlayer, Role } from '../types/game';
 
 interface TableSceneProps {
@@ -23,6 +24,8 @@ interface TableSceneProps {
   voteTally: Record<string, number>;
   phase: Phase;
   onPlayerClick?: (playerId: string) => void;
+  /** Hide player name labels during cutscenes / role-reveal overlays */
+  showLabels?: boolean;
 }
 
 type VisibilityMode = 'day' | 'night-clear' | 'night-obscured';
@@ -30,9 +33,8 @@ type VisibilityMode = 'day' | 'night-clear' | 'night-obscured';
 const SCENE_SHELL_STYLE: CSSProperties = {
   position: 'relative',
   width: '100%',
-  maxWidth: 1120,
-  height: 'min(80vh, 820px)',
-  minHeight: 440,
+  height: '100%',
+  minHeight: 0,
   border: '1px solid rgba(255, 215, 0, 0.2)',
   borderRadius: 10,
   overflow: 'hidden',
@@ -57,10 +59,10 @@ const HUD_HINT_STYLE: CSSProperties = {
 };
 
 const NAME_LABEL_BASE: CSSProperties = {
-  padding: '3px 9px',
+  padding: '2px 7px',
   borderRadius: 999,
   fontFamily: 'var(--font-display)',
-  fontSize: '0.66rem',
+  fontSize: '0.52rem',
   letterSpacing: '0.07em',
   textTransform: 'uppercase',
   whiteSpace: 'nowrap',
@@ -708,21 +710,31 @@ function Bonfire({
   const smokeRefs = useRef<Array<THREE.Mesh | null>>([]);
   const flameTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
+    canvas.width = 128;
     canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      return new THREE.CanvasTexture(canvas);
-    }
+    if (!ctx) return new THREE.CanvasTexture(canvas);
 
-    const gradient = ctx.createRadialGradient(128, 150, 8, 128, 128, 118);
-    gradient.addColorStop(0, 'rgba(255,255,230,1)');
-    gradient.addColorStop(0.2, 'rgba(255,228,160,0.95)');
-    gradient.addColorStop(0.48, 'rgba(255,150,66,0.72)');
-    gradient.addColorStop(0.74, 'rgba(255,90,32,0.3)');
-    gradient.addColorStop(1, 'rgba(255,70,22,0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 256, 256);
+    // Elongated teardrop shape: wide hot base narrows to tip
+    const body = ctx.createRadialGradient(64, 196, 6, 64, 170, 76);
+    body.addColorStop(0, 'rgba(255,255,255,1)');
+    body.addColorStop(0.12, 'rgba(255,255,200,0.97)');
+    body.addColorStop(0.28, 'rgba(255,230,80,0.9)');
+    body.addColorStop(0.50, 'rgba(255,140,30,0.72)');
+    body.addColorStop(0.72, 'rgba(255,70,12,0.38)');
+    body.addColorStop(0.90, 'rgba(200,30,5,0.12)');
+    body.addColorStop(1, 'rgba(150,10,0,0)');
+    ctx.fillStyle = body;
+    ctx.fillRect(0, 0, 128, 256);
+
+    // Bright streak up the centre to suggest a flame tip
+    const streak = ctx.createLinearGradient(0, 256, 0, 0);
+    streak.addColorStop(0, 'rgba(255,255,200,0.55)');
+    streak.addColorStop(0.25, 'rgba(255,220,80,0.28)');
+    streak.addColorStop(0.60, 'rgba(255,100,20,0.06)');
+    streak.addColorStop(1, 'rgba(255,60,0,0)');
+    ctx.fillStyle = streak;
+    ctx.fillRect(44, 0, 40, 256);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
@@ -817,19 +829,26 @@ function Bonfire({
     flameSpritesRef.current.forEach((sprite, i) => {
       if (!sprite) return;
       sprite.visible = !isDay;
-      const wobble = Math.sin(t * (6.5 + i) + i * 1.2);
-      const swirl = Math.cos(t * (4.6 + i * 0.8) + i * 2.2);
-      sprite.position.x = wobble * (0.06 + i * 0.02);
-      sprite.position.z = swirl * (0.06 + i * 0.02);
-      sprite.position.y = 0.72 + i * 0.16 + Math.abs(wobble) * 0.08;
-      const sx = 0.66 + i * 0.1 + Math.abs(swirl) * 0.07;
-      const sy = 0.94 + i * 0.2 + Math.abs(wobble) * 0.14;
+      // Each layer gets its own turbulent phase so they move independently
+      const phase = i * 0.52;
+      const w1 = Math.sin(t * (6.8 + i * 0.55) + phase);
+      const w2 = Math.cos(t * (4.1 + i * 0.7) + phase * 1.3);
+      const w3 = Math.sin(t * (9.2 + i * 0.3) + phase * 0.8);
+      sprite.position.x = w1 * (0.045 + i * 0.014) + w3 * 0.025;
+      sprite.position.z = w2 * (0.038 + i * 0.012);
+      sprite.position.y = 0.45 + i * 0.165 + Math.abs(w1) * 0.06;
+      // Taper: wide at base, narrow at tip
+      const taper = Math.max(0.25, 1 - i / 16);
+      const breath = 0.9 + Math.sin(t * 3.8 + phase) * 0.13;
+      const sx = (1.05 - i * 0.04) * taper * breath;
+      const sy = (1.0 + i * 0.14) * breath;
       sprite.scale.set(sx, sy, 1);
 
       const mat = sprite.material as THREE.SpriteMaterial;
+      const baseOpacity = i < 3 ? 0.88 : i < 7 ? 0.72 : 0.52;
       mat.opacity = isDay
         ? 0
-        : (0.42 + Math.abs(swirl) * 0.28) * THREE.MathUtils.lerp(1, obscured ? 0.62 : 0.8, blend);
+        : baseOpacity * (0.82 + Math.abs(w2) * 0.18) * THREE.MathUtils.lerp(1, obscured ? 0.58 : 0.82, blend);
     });
 
     smokePuffs.forEach((puff, i) => {
@@ -867,21 +886,26 @@ function Bonfire({
       <pointLight ref={emberRef} color="#ff5520" intensity={1.3} distance={6} position={[0, 0.8, 0]} />
       <pointLight ref={fireFillRef} color="#ffc070" intensity={0.65} distance={10} position={[0, 0.55, 0]} />
 
-      {Array.from({ length: 4 }).map((_, i) => (
+      {/* 12 layered flame sprites — white core at base, red tips at top */}
+      {[
+        '#ffffff', '#fffad0', '#ffe980', '#ffd040',
+        '#ffb830', '#ff9428', '#ff7020', '#ff5018',
+        '#ff3812', '#ff240e', '#dd1808', '#bb1006',
+      ].map((color, i) => (
         <sprite
           key={`flame-sprite-${i}`}
           ref={(node) => {
             flameSpritesRef.current[i] = node;
           }}
-          position={[0, 0.75 + i * 0.16, 0]}
-          scale={[0.85 + i * 0.12, 1.05 + i * 0.16, 1]}
+          position={[0, 0.45 + i * 0.165, 0]}
+          scale={[1.05 - i * 0.04, 1.0 + i * 0.14, 1]}
           visible={!isDay}
         >
           <spriteMaterial
             map={flameTexture}
-            color={i === 0 ? '#ffd485' : '#ff9f47'}
+            color={color}
             transparent
-            opacity={0.55}
+            opacity={i < 3 ? 0.88 : i < 7 ? 0.72 : 0.52}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />
@@ -1119,24 +1143,107 @@ function RPMAvatarModel({
 }) {
   const { scene } = useGLTF(url);
   const modelRef = useRef<THREE.Group>(null);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+  const prevTimeRef = useRef(0);
+  // ── Store foot-pin Y so useFrame can bob from the correct baseline ────────
+  const baseYRef = useRef(0);
+
   const normalizedModel = useMemo(() => {
     const model = cloneSkeleton(scene) as THREE.Object3D;
-    const initialBox = new THREE.Box3().setFromObject(model);
-    const initialSize = new THREE.Vector3();
-    initialBox.getSize(initialSize);
-    const targetHeight = 2.26;
-    const fitScale = initialSize.y > 0 ? targetHeight / initialSize.y : 1;
+
+    // --- scale to target visual height (1.12 folded in) ---
+    const targetHeight = 2.26 * 1.12;
+    const roughBox = new THREE.Box3().setFromObject(model);
+    const roughSize = new THREE.Vector3();
+    roughBox.getSize(roughSize);
+    const fitScale = roughSize.y > 0 ? targetHeight / roughSize.y : 1;
     model.scale.multiplyScalar(fitScale);
 
-    const fittedBox = new THREE.Box3().setFromObject(model);
-    const fittedCenter = new THREE.Vector3();
-    fittedBox.getCenter(fittedCenter);
-    model.position.x -= fittedCenter.x;
-    model.position.z -= fittedCenter.z;
-    model.position.y -= fittedBox.min.y;
+    // --- ground using MESH-ONLY bbox so invisible bones don't cause floating ---
+    const meshBox = new THREE.Box3();
+    model.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) meshBox.expandByObject(child);
+    });
+    if (meshBox.isEmpty()) {
+      // fallback to full object if no meshes found
+      meshBox.setFromObject(model);
+    }
+    const meshCenter = new THREE.Vector3();
+    meshBox.getCenter(meshCenter);
+    model.position.x -= meshCenter.x;
+    model.position.z -= meshCenter.z;
+    model.position.y -= meshBox.min.y; // pin feet to y=0
+
+    // ── Capture the foot-pin offset so we can bob from it later ────────────
+    baseYRef.current = model.position.y;
+
+    // Log bone names once so we can verify the skeleton
+    const boneNames: string[] = [];
+    model.traverse((obj) => { if ((obj as THREE.Bone).isBone) boneNames.push(obj.name); });
+    console.log('[TableScene] Bones:', boneNames.sort());
 
     return model;
   }, [scene]);
+
+  // ── Load idle.fbx and start AnimationMixer ────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const mixer = new THREE.AnimationMixer(normalizedModel);
+    mixerRef.current = mixer;
+    prevTimeRef.current = 0;
+
+    new FBXLoader().load(
+      '/animations/idle.fbx',
+      (fbx) => {
+        if (cancelled) return;
+        const clip = fbx.animations[0];
+        if (!clip) { console.warn('[TableScene] idle.fbx has no animation clips'); return; }
+        console.log('[TableScene] idle.fbx loaded, clips:', fbx.animations.length);
+
+        // Build avatar bone set
+        const avatarBones = new Set<string>();
+        normalizedModel.traverse((o) => { if ((o as THREE.Bone).isBone) avatarBones.add(o.name); });
+
+        // Remap tracks: handles mixamorig:BoneName → BoneName (or no change if already matching)
+        // Also SKIP .position tracks — Mixamo uses cm, THREE.js uses meters, causes 100x position offset
+        const remappedTracks = clip.tracks
+          .filter((track) => !track.name.endsWith('.position')) // ← skip root motion / hip position
+          .map((track) => {
+            const dot = track.name.indexOf('.');
+            if (dot === -1) return track;
+            const bonePart = track.name.slice(0, dot);
+            const propPart = track.name.slice(dot);
+
+            if (avatarBones.has(bonePart)) return track; // direct match
+
+            // Strip mixamorig / mixamorig: prefix
+            const bare = bonePart.replace(/^mixamorig:?/i, '');
+            if (avatarBones.has(bare)) {
+              const Ctor = track.constructor as new (n: string, t: ArrayLike<number>, v: ArrayLike<number>) => THREE.KeyframeTrack;
+              return new Ctor(bare + propPart, track.times, track.values);
+            }
+            // Try adding prefix
+            const prefixed = 'mixamorig' + bare;
+            if (avatarBones.has(prefixed)) {
+              const Ctor = track.constructor as new (n: string, t: ArrayLike<number>, v: ArrayLike<number>) => THREE.KeyframeTrack;
+              return new Ctor(prefixed + propPart, track.times, track.values);
+            }
+            return track; // no match, THREE will silently skip
+          });
+
+
+        const remapped = new THREE.AnimationClip(clip.name, clip.duration, remappedTracks as THREE.KeyframeTrack[]);
+        const action = mixer.clipAction(remapped);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.play();
+        console.log('[TableScene] idle animation started');
+      },
+      undefined,
+      (err) => { console.warn('[TableScene] idle.fbx 404/error:', err); }
+    );
+
+    return () => { cancelled = true; mixer.stopAllAction(); mixerRef.current = null; };
+  }, [normalizedModel]);
 
   useEffect(() => {
     normalizedModel.traverse((child) => {
@@ -1155,13 +1262,17 @@ function RPMAvatarModel({
   useFrame((state) => {
     const root = modelRef.current;
     if (!root) return;
-    const idleHeight = 0.01;
-    const bob = alive ? 0.017 : 0.006;
-    root.position.y = idleHeight + Math.sin(state.clock.elapsedTime * 1.35 + bobSeed) * bob;
+    const dt = state.clock.elapsedTime - prevTimeRef.current;
+    prevTimeRef.current = state.clock.elapsedTime;
+    // Advance idle mixer (only for alive players)
+    if (mixerRef.current && alive) mixerRef.current.update(dt);
+    // Bob relative to foot-pin baseline — prevents floating/sinking
+    const bob = alive ? 0.012 : 0.004;
+    root.position.y = baseYRef.current + Math.sin(state.clock.elapsedTime * 1.35 + bobSeed) * bob;
   });
 
   return (
-    <group ref={modelRef} scale={[1.12, 1.12, 1.12]}>
+    <group ref={modelRef}>
       <primitive object={normalizedModel} />
     </group>
   );
@@ -1175,6 +1286,7 @@ function AvatarSeat({
   voteCount,
   visibilityMode,
   onPlayerClick,
+  showLabels,
 }: {
   player: PublicPlayer;
   index: number;
@@ -1183,6 +1295,7 @@ function AvatarSeat({
   voteCount: number;
   visibilityMode: VisibilityMode;
   onPlayerClick?: (playerId: string) => void;
+  showLabels: boolean;
 }) {
   const seat = getSeatPosition(index, total);
   const facingY = Math.atan2(seat[0], seat[2]) + Math.PI;
@@ -1250,9 +1363,9 @@ function AvatarSeat({
       </group>
       {player.alive && (
         <pointLight
-          color={isNight ? '#ffe8c4' : (isMe ? '#ffd59a' : '#ffc58f')}
-          intensity={isNight ? (isMe ? 1.6 : 1.25) : (isMe ? 0.38 : 0.2)}
-          distance={isNight ? 5.4 : 2.8}
+          color={isNight ? '#ff9a4a' : (isMe ? '#ffd59a' : '#ffc58f')}
+          intensity={isNight ? (isMe ? 0.55 : 0.4) : (isMe ? 0.38 : 0.2)}
+          distance={isNight ? 3.5 : 2.8}
           decay={2}
           position={[0, 2.1, 0.1]}
         />
@@ -1260,8 +1373,8 @@ function AvatarSeat({
       {player.alive && isNight && (
         <pointLight
           color="#9dc7ff"
-          intensity={isMe ? 0.48 : 0.34}
-          distance={4.2}
+          intensity={isMe ? 0.22 : 0.15}
+          distance={3.5}
           decay={2}
           position={[0, 2.35, -0.85]}
         />
@@ -1274,14 +1387,16 @@ function AvatarSeat({
         </mesh>
       )}
 
-      <Html position={[0, 2.95, 0]} transform sprite>
-        <div style={labelStyle}>
-          {!player.alive ? '☠ ' : ''}{player.name}
-          {isMe ? ' (you)' : ''}
-          {voteCount > 0 ? ` • ${voteCount}` : ''}
-          {!player.connected && player.alive ? ' • offline' : ''}
-        </div>
-      </Html>
+      {showLabels && (
+        <Html position={[0, 3.5, 0]} transform sprite>
+          <div style={labelStyle}>
+            {!player.alive ? '☠ ' : ''}{player.name}
+            {isMe ? ' (you)' : ''}
+            {voteCount > 0 ? ` • ${voteCount}` : ''}
+            {!player.connected && player.alive ? ' • offline' : ''}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
@@ -1293,6 +1408,7 @@ function HauntedForestScene({
   voteTally,
   phase,
   onPlayerClick,
+  showLabels = true,
 }: TableSceneProps) {
   const { gl } = useThree();
   const visibilityMode = getVisibilityMode(phase);
@@ -1394,6 +1510,7 @@ function HauntedForestScene({
           voteCount={voteTally[player.id] ?? 0}
           visibilityMode={visibilityMode}
           onPlayerClick={onPlayerClick}
+          showLabels={showLabels}
         />
       ))}
 
@@ -1421,6 +1538,7 @@ export const TableScene = memo(function TableScene({
   voteTally,
   phase,
   onPlayerClick,
+  showLabels = true,
 }: TableSceneProps) {
   useEffect(() => {
     players.forEach((player) => {
@@ -1474,6 +1592,7 @@ export const TableScene = memo(function TableScene({
           voteTally={voteTally}
           phase={phase}
           onPlayerClick={onPlayerClick}
+          showLabels={showLabels}
         />
       </Canvas>
 
