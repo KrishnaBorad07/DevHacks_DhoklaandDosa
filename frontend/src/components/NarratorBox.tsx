@@ -69,14 +69,26 @@ const NARRATOR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 1
   <circle cx="85" cy="90" r="4" fill="#ffd700" opacity="0.6"/>
 </svg>`;
 
+import { generateNarratorAudio } from '../lib/elevenlabs';
+
 export function NarratorBox({ text, outcome, onDone }: NarratorBoxProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [isDone, setIsDone] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const charIndexRef = useRef(0);
 
-  // Typewriter effect
+  // Audio playback ref
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Typewriter and Audio effect
   useEffect(() => {
+    // Cleanup any previous audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+
     if (!text) {
       setDisplayedText('');
       setIsDone(false);
@@ -89,6 +101,7 @@ export function NarratorBox({ text, outcome, onDone }: NarratorBoxProps) {
 
     if (intervalRef.current) clearInterval(intervalRef.current);
 
+    // 1. Start typewriter effect
     intervalRef.current = setInterval(() => {
       charIndexRef.current += 1;
       setDisplayedText(text.slice(0, charIndexRef.current));
@@ -96,10 +109,26 @@ export function NarratorBox({ text, outcome, onDone }: NarratorBoxProps) {
         clearInterval(intervalRef.current!);
         setIsDone(true);
       }
-    }, 28);
+    }, 32); // Slightly slower to match speaking pace
+
+    // 2. Fetch and play ElevenLabs audio (async)
+    let isMounted = true;
+    generateNarratorAudio(text).then((audioUrl) => {
+      if (isMounted && audioUrl && !isDone) {
+        const audio = new Audio(audioUrl);
+        audio.volume = 0.8;
+        audio.play().catch(e => console.error("Narrator audio playback blocked:", e));
+        audioRef.current = audio;
+      }
+    });
 
     return () => {
+      isMounted = false;
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
     };
   }, [text]);
 
@@ -109,6 +138,11 @@ export function NarratorBox({ text, outcome, onDone }: NarratorBoxProps) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setDisplayedText(text);
       setIsDone(true);
+
+      // Stop audio immediately if user skips the animation
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     }
   };
 
