@@ -15,6 +15,9 @@ import { VotePanel } from './VotePanel';
 import { GameEndScreen } from './GameEndScreen';
 import { RoleRevealScreen } from './RoleRevealScreen';
 import { getHeadshotUrl, getAvatarColor, getInitials } from '../lib/avatarUtils';
+import { useVoiceChat } from '../hooks/useVoiceChat';
+import { VoiceBar } from './VoiceBar';
+import { useSocket } from '../hooks/useSocket';
 import type { useGameState } from '../hooks/useGameState';
 
 type GameStateApi = ReturnType<typeof useGameState>;
@@ -31,10 +34,24 @@ const ROLE_INFO: Record<string, { icon: string; label: string; color: string }> 
   citizen: { icon: '👤', label: 'Citizen', color: 'var(--noir-text)' },
 };
 
-// Timer display hook
+// Real countdown timer — counts down from timerMs on each phase change
 function usePhaseTimer(timerMs: number, phase: string) {
-  const seconds = Math.ceil(timerMs / 1000);
-  return seconds;
+  const [remaining, setRemaining] = useState(timerMs);
+
+  // Reset whenever a new phase arrives with a fresh timer value
+  useEffect(() => {
+    if (timerMs <= 0) return;
+    setRemaining(timerMs);
+    const interval = setInterval(() => {
+      setRemaining((prev) => Math.max(0, prev - 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerMs, phase]); // re-run when phase changes (new phase brings new timerMs)
+
+  const totalSec = Math.ceil(remaining / 1000);
+  const mins = Math.floor(totalSec / 60).toString().padStart(2, '0');
+  const secs = (totalSec % 60).toString().padStart(2, '0');
+  return { seconds: totalSec, label: `${mins}:${secs}`, urgent: totalSec <= 10 && totalSec > 0 };
 }
 
 export function Room({ api }: RoomProps) {
@@ -91,6 +108,17 @@ export function Room({ api }: RoomProps) {
     ? myMafiaTeam.filter((m) => players.find((p) => p.id === m.id && p.alive)).length
     : players.filter((p) => p.alive).length; // fallback — server controls mafia chat
 
+  // ── Voice chat (uses mafiaAliveCount for channel gating) ─────────────────────
+  const gameSocket = useSocket(); // same socket instance used to join the room
+  const voice = useVoiceChat(
+    gameSocket,
+    roomCode,
+    phase,
+    myRole,
+    isAlive,
+    mafiaAliveCount,
+  );
+
   const handleVote = useCallback(
     (targetId: string) => {
       if (roomCode && phase === 'vote' && isAlive) {
@@ -140,8 +168,9 @@ export function Room({ api }: RoomProps) {
     navigate('/');
   };
 
-  // Phase timer display (countdown from timer prop; note: real-time tick is client-side approximation)
   const roleInfo = myRole ? ROLE_INFO[myRole] : null;
+  // ── Countdown timer ──
+  const countdown = usePhaseTimer(timer, phase);
 
   const headshotUrl = myPlayer?.avatar?.url ? getHeadshotUrl(myPlayer.avatar.url) : '';
 
@@ -189,6 +218,16 @@ export function Room({ api }: RoomProps) {
           onPlayAgain={handlePlayAgain}
           onLeave={handleLeave}
           isHost={isHost}
+        />
+      )}
+
+      {/* ── Voice chat HUD ──────────────────────────────────────────────────── */}
+      {roomCode && (
+        <VoiceBar
+          voice={voice}
+          players={players}
+          myId={myId}
+          phase={phase}
         />
       )}
 
@@ -258,7 +297,46 @@ export function Room({ api }: RoomProps) {
           </p>
         </div>
 
-        {/* My role + avatar */}
+        {/* ── Countdown timer: night / discussion / vote ── */}
+        {['night', 'day', 'vote'].includes(phase) && (
+          <div style={{ textAlign: 'center', minWidth: 68 }}>
+            <p style={{
+              fontSize: '0.5rem',
+              color: 'var(--noir-text-dim)',
+              letterSpacing: '0.14em',
+              fontFamily: 'var(--font-display)',
+              textTransform: 'uppercase',
+              marginBottom: '0.1rem',
+            }}>
+              {phase === 'night' ? 'NIGHT ENDS IN'
+                : phase === 'vote' ? 'VOTE ENDS IN'
+                  : 'DISCUSSION ENDS IN'}
+            </p>
+            <p style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.3rem',
+              letterSpacing: '0.1em',
+              fontVariantNumeric: 'tabular-nums',
+              lineHeight: 1,
+              color: countdown.urgent
+                ? '#ff3333'
+                : phase === 'night' ? '#00d4ff'
+                  : phase === 'vote' ? 'var(--noir-red)'
+                    : 'var(--noir-gold)',
+              textShadow: countdown.urgent
+                ? '0 0 14px rgba(255,40,40,0.95)'
+                : phase === 'night' ? '0 0 10px rgba(0,212,255,0.6)'
+                  : phase === 'vote' ? '0 0 10px rgba(200,0,0,0.5)'
+                    : '0 0 10px rgba(255,215,0,0.5)',
+              animation: countdown.urgent ? 'urgent-pulse 0.55s ease-in-out infinite alternate' : 'none',
+            }}>
+              {countdown.label}
+            </p>
+            {/* Inline keyframe for the urgent pulse — only injected once */}
+            <style>{`@keyframes urgent-pulse { from { opacity: 1; } to { opacity: 0.35; } }`}</style>
+          </div>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {myPlayer && (
             headshotUrl

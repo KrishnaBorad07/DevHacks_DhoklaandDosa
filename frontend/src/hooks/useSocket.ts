@@ -10,7 +10,9 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
 let socketInstance: Socket | null = null;
 
 function getSocket(): Socket {
-  if (!socketInstance || !socketInstance.connected) {
+  if (!socketInstance) {
+    // Create once — never recreate on disconnect (that would change the socket ID
+    // and break server-side room membership lookup)
     socketInstance = io(SOCKET_URL, {
       autoConnect: true,
       reconnectionAttempts: 5,
