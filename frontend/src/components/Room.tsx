@@ -461,13 +461,13 @@ export function Room({ api }: RoomProps) {
           <div
             style={{
               display: 'grid',
-              gridTemplateRows: '70fr 30fr', /* Reduced 3D panel, gave more room to Narrator */
+              gridTemplateRows: '72fr 28fr',
               gap: '0.75rem',
               minWidth: 0,
               minHeight: 0,
             }}
           >
-            {/* Top section (70% height) - 3D Scene */}
+            {/* Top section (72% height) - 3D Scene */}
             <div
               className="glass-card"
               style={{
@@ -475,8 +475,9 @@ export function Room({ api }: RoomProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: 0,
-                padding: '0.2rem',
+                padding: 0,
                 border: '1px solid rgba(255,215,0,0.15)',
+                overflow: 'hidden',
               }}
             >
               <div style={{ position: 'absolute', top: '0.75rem', left: '1rem', zIndex: 5 }}>
@@ -512,40 +513,129 @@ export function Room({ api }: RoomProps) {
                 </div>
               )}
 
-              {/* Round table */}
-              {players.length > 0 && (
-                <TableScene
-                  players={players}
-                  myId={myId}
-                  myRole={myRole}
-                  voteTally={voteTally}
-                  phase={phase}
-                  onPlayerClick={phase === 'vote' && isAlive ? handleVote : undefined}
-                />
+              <div style={{ position: 'relative', flex: 1, width: '100%', minHeight: 0, borderRadius: 4, overflow: 'hidden' }}>
+                {players.length > 0 && (
+                  <TableScene
+                    players={players}
+                    myId={myId}
+                    myRole={myRole}
+                    voteTally={voteTally}
+                    phase={phase}
+                    onPlayerClick={phase === 'vote' && isAlive ? handleVote : undefined}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Bottom section (25% height) - AI Narrator Container */}
+            <div
+              className="glass-card"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 0,
+                padding: '0.75rem',
+                border: '1px solid rgba(255,215,0,0.15)',
+                background: 'rgba(5,5,5,0.7)',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ flex: 1, maxWidth: 600, height: '100%', display: 'flex', alignItems: 'center' }}>
+                <AnimatePresence mode="wait">
+                  {(phase === 'day' || phase === 'vote') && narratorText ? (
+                    <motion.div
+                      key="narrator-active"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}
+                    >
+                      <NarratorBox
+                        text={narratorText}
+                        outcome={narratorOutcome}
+                        onDone={clearNarrator}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="narrator-idle"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.3 }}
+                      style={{ textAlign: 'center', width: '100%' }}
+                    >
+                      <p style={{ fontSize: '0.7rem', letterSpacing: '0.3em', fontFamily: 'var(--font-display)' }}>
+                        OBSERVING CITY STREETS...
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+          {/* ── RIGHT COLUMN (30% width) ────────────────────────────────── */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: '35fr 65fr',
+              gap: '0.75rem',
+              minWidth: 0,
+              minHeight: 0,
+            }}
+          >
+            {/* Top section (35% height) - Actions / Voting / Notes */}
+            <div
+              className="glass-card"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.6rem',
+                minHeight: 0,
+                padding: '0.75rem',
+                border: '1px solid rgba(255,215,0,0.15)',
+                overflowY: 'auto',
+                background: 'rgba(10,10,10,0.85)',
+              }}
+            >
+              {/* Night action modal */}
+              {phase === 'night' && myRole && roomCode && (
+                <div style={{ flexShrink: 0 }}>
+                  <NightActionModal
+                    myRole={myRole}
+                    myId={myId ?? ''}
+                    players={players}
+                    submitted={nightActionSubmitted}
+                    roomCode={roomCode}
+                    onSubmit={handleNightAction}
+                  />
+                </div>
               )}
 
-              {/* Narrator box (day start) */}
-              {(phase === 'day' || phase === 'vote') && narratorText && (
-                <div style={{ width: '100%', maxWidth: 520 }}>
-                  <NarratorBox
-                    text={narratorText}
-                    outcome={narratorOutcome}
-                    onDone={clearNarrator}
+              {/* Day vote panel */}
+              {(phase === 'day' || phase === 'vote') && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <VotePanel
+                    players={players}
+                    myId={myId}
+                    votes={votes}
+                    voteTally={voteTally}
+                    alive={isAlive}
+                    onVote={handleVote}
+                    phase={phase}
+                    isHost={isHost}
+                    onSkipDiscussion={() => roomCode && skipDiscussion(roomCode)}
                   />
                 </div>
               )}
 
               {/* Detective results history */}
               {myRole === 'detective' && detectiveResults.length > 0 && (
-                <div
-                  className="glass-card"
-                  style={{ width: '100%', maxWidth: 520, padding: '0.75rem' }}
-                >
-                  <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.65rem', color: 'var(--noir-neon-blue)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
-                    🕵️ YOUR INVESTIGATION NOTES
+                <div style={{ flexShrink: 0, padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: 4, border: '1px solid rgba(0, 212, 255, 0.2)' }}>
+                  <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.6rem', color: 'var(--noir-neon-blue)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
+                    🕵️ INVESTIGATION NOTES
                   </h4>
                   {detectiveResults.map((r, i) => (
-                    <p key={i} style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>
+                    <p key={i} style={{ fontSize: '0.7rem', marginBottom: '0.2rem' }}>
                       <span style={{ color: 'var(--noir-gold)' }}>{r.targetName}</span>
                       {' — '}
                       <span style={{ color: r.isMafia ? 'var(--noir-red)' : '#00ff88' }}>
@@ -558,31 +648,23 @@ export function Room({ api }: RoomProps) {
 
               {/* Mafia team visibility */}
               {myRole === 'mafia' && myMafiaTeam.length > 1 && (
-                <div
-                  className="glass-card"
-                  style={{
-                    width: '100%',
-                    maxWidth: 520,
-                    padding: '0.75rem',
-                    border: '1px solid rgba(255,0,0,0.3)',
-                  }}
-                >
-                  <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.65rem', color: 'var(--noir-red)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
+                <div style={{ flexShrink: 0, padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: 4, border: '1px solid rgba(255, 0, 0, 0.2)' }}>
+                  <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.6rem', color: 'var(--noir-red)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
                     🕶️ YOUR SYNDICATE
                   </h4>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
                     {myMafiaTeam.map((m) => {
                       const pub = players.find((p) => p.id === m.id);
                       const memberHeadshot = m.avatar?.url ? getHeadshotUrl(m.avatar.url) : '';
                       return (
                         <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           {memberHeadshot
-                            ? <img src={memberHeadshot} alt={m.name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
-                            : <div style={{ width: 36, height: 36, borderRadius: '50%', background: getAvatarColor(m.name), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.8rem' }}>{getInitials(m.name)}</span>
+                            ? <img src={memberHeadshot} alt={m.name} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />
+                            : <div style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(m.name), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.6rem' }}>{getInitials(m.name)}</span>
                             </div>
                           }
-                          <p style={{ fontSize: '0.7rem', color: pub?.alive === false ? 'var(--noir-text-dim)' : 'var(--noir-red)' }}>
+                          <p style={{ fontSize: '0.65rem', color: pub?.alive === false ? 'var(--noir-text-dim)' : 'var(--noir-red)' }}>
                             {m.name} {pub?.alive === false ? '(dead)' : ''}
                           </p>
                         </div>
@@ -593,133 +675,31 @@ export function Room({ api }: RoomProps) {
               )}
             </div>
 
-            {/* ── RIGHT COLUMN (30% width) ────────────────────────────────── */}
+            {/* Bottom section (65% height) - Chat */}
             <div
+              className="glass-card"
               style={{
-                display: 'grid',
-                gridTemplateRows: '40fr 60fr', /* Increased Voting/Action area significantly, reduced chat */
-                gap: '0.75rem',
-                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
                 minHeight: 0,
+                border: '1px solid rgba(255,215,0,0.15)',
+                overflow: 'hidden',
+                background: 'rgba(10,10,10,0.85)',
               }}
             >
-              {/* Top section (35% height) - Actions / Voting / Notes */}
-              <div
-                className="glass-card"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.6rem',
-                  minHeight: 0,
-                  padding: '0.75rem',
-                  border: '1px solid rgba(255,215,0,0.15)',
-                  overflowY: 'auto',
-                  background: 'rgba(10,10,10,0.85)',
-                }}
-              >
-                {/* Night action modal */}
-                {phase === 'night' && myRole && roomCode && (
-                  <div style={{ flexShrink: 0 }}>
-                    <NightActionModal
-                      myRole={myRole}
-                      myId={myId ?? ''}
-                      players={players}
-                      submitted={nightActionSubmitted}
-                      roomCode={roomCode}
-                      onSubmit={handleNightAction}
-                    />
-                  </div>
-                )}
-
-                {/* Day vote panel */}
-                {(phase === 'day' || phase === 'vote') && (
-                  <div style={{ flexShrink: 0 }}>
-                    <VotePanel
-                      players={players}
-                      myId={myId}
-                      votes={votes}
-                      voteTally={voteTally}
-                      alive={isAlive}
-                      onVote={handleVote}
-                      phase={phase}
-                      isHost={isHost}
-                      onSkipDiscussion={() => roomCode && skipDiscussion(roomCode)}
-                    />
-                  </div>
-                )}
-
-                {/* Detective results history */}
-                {myRole === 'detective' && detectiveResults.length > 0 && (
-                  <div style={{ flexShrink: 0, padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: 4, border: '1px solid rgba(0, 212, 255, 0.2)' }}>
-                    <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.6rem', color: 'var(--noir-neon-blue)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
-                      🕵️ INVESTIGATION NOTES
-                    </h4>
-                    {detectiveResults.map((r, i) => (
-                      <p key={i} style={{ fontSize: '0.7rem', marginBottom: '0.2rem' }}>
-                        <span style={{ color: 'var(--noir-gold)' }}>{r.targetName}</span>
-                        {' — '}
-                        <span style={{ color: r.isMafia ? 'var(--noir-red)' : '#00ff88' }}>
-                          {r.isMafia ? '🔴 MAFIA' : '✅ INNOCENT'}
-                        </span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-
-                {/* Mafia team visibility */}
-                {myRole === 'mafia' && myMafiaTeam.length > 1 && (
-                  <div style={{ flexShrink: 0, padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: 4, border: '1px solid rgba(255, 0, 0, 0.2)' }}>
-                    <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '0.6rem', color: 'var(--noir-red)', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>
-                      🕶️ YOUR SYNDICATE
-                    </h4>
-                    <div className="flex flex-col gap-2">
-                      {myMafiaTeam.map((m) => {
-                        const pub = players.find((p) => p.id === m.id);
-                        const memberHeadshot = m.avatar?.url ? getHeadshotUrl(m.avatar.url) : '';
-                        return (
-                          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            {memberHeadshot
-                              ? <img src={memberHeadshot} alt={m.name} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />
-                              : <div style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(m.name), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: '0.6rem' }}>{getInitials(m.name)}</span>
-                              </div>
-                            }
-                            <p style={{ fontSize: '0.65rem', color: pub?.alive === false ? 'var(--noir-text-dim)' : 'var(--noir-red)' }}>
-                              {m.name} {pub?.alive === false ? '(dead)' : ''}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom section (65% height) - Chat */}
-              <div
-                className="glass-card"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  minHeight: 0,
-                  border: '1px solid rgba(255,215,0,0.15)',
-                  overflow: 'hidden',
-                  background: 'rgba(10,10,10,0.85)',
-                }}
-              >
-                <Chat
-                  messages={messages}
-                  myId={myId}
-                  myRole={myRole}
-                  alive={isAlive}
-                  roomCode={roomCode ?? ''}
-                  onSend={sendChat}
-                  aliveMafiaCount={myRole === 'mafia' ? mafiaAliveCount : 0}
-                />
-              </div>
+              <Chat
+                messages={messages}
+                myId={myId}
+                myRole={myRole}
+                alive={isAlive}
+                roomCode={roomCode ?? ''}
+                onSend={sendChat}
+                aliveMafiaCount={myRole === 'mafia' ? mafiaAliveCount : 0}
+              />
             </div>
           </div>
-      )}
         </div>
-      );
+      )}
+    </div>
+  );
 }

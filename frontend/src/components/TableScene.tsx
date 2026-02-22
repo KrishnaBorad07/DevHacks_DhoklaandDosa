@@ -33,9 +33,8 @@ type VisibilityMode = 'day' | 'night-clear' | 'night-obscured';
 const SCENE_SHELL_STYLE: CSSProperties = {
   position: 'relative',
   width: '100%',
-  maxWidth: 1120,
-  height: 'min(80vh, 820px)',
-  minHeight: 440,
+  height: '100%',
+  minHeight: 0,
   border: '1px solid rgba(255, 215, 0, 0.2)',
   borderRadius: 10,
   overflow: 'hidden',
