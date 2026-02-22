@@ -45,9 +45,18 @@ export function PhaseOverlay({ phase, round }: PhaseOverlayProps) {
   const [lastPhase, setLastPhase] = useState<Phase>(phase);
 
   useEffect(() => {
+    // When the game resets to lobby (Play Again), reset our tracking so the
+    // NEXT real round-1 transition fires correctly — but show nothing now.
+    if (phase === 'lobby') {
+      setLastPhase('lobby');
+      setVisible(false);
+      return;
+    }
+
     if (
       phase !== lastPhase &&
-      (phase === 'night' || phase === 'day' || phase === 'vote')
+      (phase === 'night' || phase === 'day' || phase === 'vote') &&
+      round >= 1   // Round 0 only appears during play-again reset — never show it
     ) {
       setLastPhase(phase);
       setDisplayPhase(phase);
@@ -55,7 +64,7 @@ export function PhaseOverlay({ phase, round }: PhaseOverlayProps) {
       const t = setTimeout(() => setVisible(false), 2200);
       return () => clearTimeout(t);
     }
-  }, [phase, lastPhase]);
+  }, [phase, lastPhase, round]);
 
   const config = displayPhase in PHASE_CONFIG
     ? PHASE_CONFIG[displayPhase as keyof typeof PHASE_CONFIG]

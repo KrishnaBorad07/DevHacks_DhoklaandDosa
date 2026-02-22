@@ -4,6 +4,7 @@ import { Lobby } from './components/Lobby';
 import { Room } from './components/Room';
 import { LandingPage } from './components/LandingPage';
 import { HowToPlay } from './components/HowToPlay';
+import { AvatarTest } from './pages/AvatarTest';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
@@ -73,6 +74,9 @@ function App() {
             )
           }
         />
+
+        {/* Avatar animation tester — dev only */}
+        <Route path="/avatar-test" element={<AvatarTest />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
