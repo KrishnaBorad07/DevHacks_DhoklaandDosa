@@ -362,6 +362,7 @@ function resolveVotePhase(code: string): void {
   room.timer = setTimeout(() => startNightPhase(code), 3_000);
 }
 
+
 /** End the game and broadcast roles */
 function endGame(code: string, winner: 'mafia' | 'town'): void {
   const room = getRoom(code);
@@ -644,19 +645,11 @@ io.on('connection', (socket: Socket) => {
         case 'kill': {
           if (player.role !== 'mafia') return socket.emit('error', { message: 'Only mafia can kill.' });
           if (data.targetId === socket.id) return socket.emit('error', { message: 'Cannot target yourself.' });
-          // ── FIRST MAFIA KILL = IMMEDIATE resolve ───────────────────────────
-          // Only one mafia vote needed; the first to pick triggers the night.
+          // Store the mafia vote — only the first valid kill vote counts
           if (room.mafiaVotes.length === 0) {
             room.mafiaVotes.push({ voterId: socket.id, targetId: data.targetId });
-            room.nightActionsSubmitted.add(socket.id);
-            touchRoom(data.code);
-            // Lock out other mafias instantly
-            if (room.timer) clearTimeout(room.timer);
-            resolveNightPhase(data.code);
-            return; // skip the common nightActionsSubmitted.add below
           }
-          // Already resolved — duplicate submission, ignore
-          return;
+          break; // Fall through to register "submitted" and check if ALL roles are done
         }
         case 'save': {
           if (player.role !== 'doctor') return socket.emit('error', { message: 'Only doctor can save.' });

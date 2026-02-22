@@ -675,8 +675,8 @@ export function Room({ api }: RoomProps) {
                 background: 'rgba(10,10,10,0.85)',
               }}
             >
-              {/* Night action modal */}
-              {phase === 'night' && myRole && roomCode && (
+              {/* Night action modal — dead players cannot use powers */}
+              {phase === 'night' && myRole && roomCode && isAlive && (
                 <div style={{ flexShrink: 0 }}>
                   <NightActionModal
                     myRole={myRole}
