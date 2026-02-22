@@ -225,8 +225,8 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
 
   return (
     <>
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
           <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--noir-gold)', fontSize: '0.85rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             {phase === 'vote' ? '⚖️ Cast Your Vote' : '💬 Discussion'}
           </h3>
@@ -267,7 +267,7 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.6rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '1rem' }}>
           <AnimatePresence>
             {alivePlayers.map((player) => {
               const voteCount = voteTally[player.id] ?? 0;
@@ -288,18 +288,18 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '0.3rem',
-                    padding: '0.6rem 0.4rem',
+                    gap: '0.5rem',
+                    padding: '0.8rem 0.5rem',
                     background: isVoted ? 'rgba(200,0,0,0.15)' : 'rgba(20,20,20,0.8)',
                     border: `1px solid ${isVoted ? 'var(--noir-red)' : hasMaxVotes ? 'rgba(255,215,0,0.5)' : 'rgba(255,215,0,0.1)'}`,
-                    borderRadius: 4,
+                    borderRadius: 6,
                     cursor: alive && !isSelf && phase === 'vote' ? 'pointer' : 'default',
                     boxShadow: isVoted ? 'var(--shadow-red)' : hasMaxVotes ? '0 0 10px rgba(255,215,0,0.25)' : 'none',
                     transition: 'all 200ms',
                   }}
                   onClick={() => handleCardClick(player)}
                 >
-                  <PlayerAvatar player={player} size={64} />
+                  <PlayerAvatar player={player} size={84} />
 
                   {/* Voter headshot strip — below avatar, above name */}
                   {voters.length > 0 && (
@@ -314,7 +314,7 @@ export function VotePanel({ players, myId, votes, voteTally, alive, onVote, phas
                     </motion.div>
                   )}
 
-                  <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.65rem', letterSpacing: '0.06em', color: isVoted ? 'var(--noir-red)' : 'var(--noir-gold)', textAlign: 'center', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.75rem', letterSpacing: '0.08em', color: isVoted ? 'var(--noir-red)' : 'var(--noir-gold)', textAlign: 'center', maxWidth: '95%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {player.name}{isSelf && ' (you)'}
                   </p>
                 </motion.div>

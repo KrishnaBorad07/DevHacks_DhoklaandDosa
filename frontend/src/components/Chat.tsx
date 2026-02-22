@@ -49,12 +49,16 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
   const formatTime = (ts: number) => {
     const d = new Date(ts);
     return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
   return (
     <div
       className="glass-card flex flex-col"
-      style={{ height: '100%', minHeight: 300, maxHeight: 420 }}
+      style={{
+        height: '100%',
+        minHeight: 300,
+      }}
     >
       {/* Header tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,215,0,0.12)', flexShrink: 0 }}>
@@ -105,10 +109,10 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
             } else {
               borderStyle = {
                 borderLeft: `2px solid ${isSystem
-                    ? 'rgba(255,215,0,0.3)'
-                    : msg.channel === 'mafia'
-                      ? 'var(--noir-red)'
-                      : 'rgba(255,215,0,0.2)'
+                  ? 'rgba(255,215,0,0.3)'
+                  : msg.channel === 'mafia'
+                    ? 'var(--noir-red)'
+                    : 'rgba(255,215,0,0.2)'
                   }`,
                 paddingLeft: '0.5rem',
                 opacity: isSystem ? 0.7 : 1,
@@ -127,7 +131,7 @@ export function Chat({ messages, myId, myRole, alive, roomCode, onSend, aliveMaf
                   <div className="flex items-center gap-2">
                     <span style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: '0.65rem',
+                      fontSize: '0.85rem',
                       color: msg.senderId === myId ? 'var(--noir-gold)' : '#c0a060',
                       letterSpacing: '0.08em',
                     }}>

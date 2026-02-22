@@ -28,14 +28,14 @@ const PHASE_DURATIONS: Record<CutscenePhase, number> = {
 const PHASE_ORDER: CutscenePhase[] = ['intro', 'approach', 'attack', 'impact', 'result'];
 
 // ── Easing helpers ────────────────────────────────────────────────────────────
-const easeIn     = (t: number) => t * t;
+const easeIn = (t: number) => t * t;
 const smoothstep = (t: number) => t * t * (3 - 2 * t);
-const clamp      = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 // ── Find a bone by multiple naming conventions ────────────────────────────────
 function findBone(bones: Map<string, THREE.Bone>, ...names: string[]): THREE.Bone | null {
   for (const name of names) {
-    if (bones.has(name))              return bones.get(name)!;
+    if (bones.has(name)) return bones.get(name)!;
     if (bones.has('mixamorig' + name)) return bones.get('mixamorig' + name)!;
     if (bones.has('mixamorig:' + name)) return bones.get('mixamorig:' + name)!;
   }
@@ -188,12 +188,12 @@ function AvatarModel({ url, phase, phaseProgress, saved }: {
     return m;
   }, [scene]);
 
-  const groupRef     = useRef<THREE.Group>(null);
-  const mixerRef     = useRef<THREE.AnimationMixer | null>(null);
-  const prevTimeRef  = useRef(0);
-  const clipsRef     = useRef<{ walk: THREE.AnimationClip | null; falling: THREE.AnimationClip | null; victory: THREE.AnimationClip | null }>
+  const groupRef = useRef<THREE.Group>(null);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+  const prevTimeRef = useRef(0);
+  const clipsRef = useRef<{ walk: THREE.AnimationClip | null; falling: THREE.AnimationClip | null; victory: THREE.AnimationClip | null }>
     ({ walk: null, falling: null, victory: null });
-  const hasFBXRef    = useRef(false);
+  const hasFBXRef = useRef(false);
   const currentPhaseRef = useRef<CutscenePhase>(phase);
 
   // ── Shared helper: filter positions, remap bone names ────────────────────────
@@ -250,7 +250,7 @@ function AvatarModel({ url, phase, phaseProgress, saved }: {
       console.log('[Cutscene] bones:', Array.from(avatarBones).sort().join(', '));
 
       clipsRef.current = {
-        walk:    walkRaw    ? makeClip(walkRaw,    'walk',    avatarBones) : null,
+        walk: walkRaw ? makeClip(walkRaw, 'walk', avatarBones) : null,
         falling: fallingRaw ? makeClip(fallingRaw, 'falling', avatarBones) : null,
         victory: victoryRaw ? makeClip(victoryRaw, 'victory', avatarBones) : null,
       };
@@ -310,7 +310,7 @@ function AvatarModel({ url, phase, phaseProgress, saved }: {
   useFrame(({ clock }) => {
     const g = groupRef.current;
     if (!g) return;
-    const t  = clock.elapsedTime;
+    const t = clock.elapsedTime;
     const dt = t - prevTimeRef.current;
     prevTimeRef.current = t;
     if (mixerRef.current) mixerRef.current.update(dt);
@@ -324,7 +324,7 @@ function AvatarModel({ url, phase, phaseProgress, saved }: {
       const prog = easeIn(clamp(phaseProgress * 1.4, 0, 1));
       g.rotation.x = prog * (Math.PI / 2.05);
       g.position.y = -prog * 0.55;
-      g.position.z =  prog * 0.30;
+      g.position.z = prog * 0.30;
     } else if (phase === 'impact' && saved) {
       if (phaseProgress < 0.3) {
         g.rotation.x = Math.sin(phaseProgress * 60) * 0.1 * (1 - phaseProgress / 0.3);
@@ -383,25 +383,25 @@ function CinematicScene({ cutscene, phase, phaseProgress }: {
 }) {
   const { victimAvatar, victimName, saved } = cutscene;
   const hasAvatar = Boolean(victimAvatar?.url);
-  const color     = getAvatarColor(victimName ?? 'X');
+  const color = getAvatarColor(victimName ?? 'X');
 
-  const bloodStart  = useRef(0);
-  const healStart   = useRef(0);
+  const bloodStart = useRef(0);
+  const healStart = useRef(0);
   const bloodActive = useRef(false);
-  const healActive  = useRef(false);
-  const { clock }   = useThree();
+  const healActive = useRef(false);
+  const { clock } = useThree();
 
   useEffect(() => {
     if (phase === 'attack') {
-      bloodStart.current  = clock.elapsedTime * 1000 + 500;
-      healStart.current   = clock.elapsedTime * 1000 + 500;
+      bloodStart.current = clock.elapsedTime * 1000 + 500;
+      healStart.current = clock.elapsedTime * 1000 + 500;
       bloodActive.current = !saved;
-      healActive.current  = saved;
+      healActive.current = saved;
     }
   }, [phase, saved, clock]);
 
-  const bloodIndices  = useMemo(() => Array.from({ length: 22 }, (_, i) => i), []);
-  const healIndices   = useMemo(() => Array.from({ length: 14 }, (_, i) => i), []);
+  const bloodIndices = useMemo(() => Array.from({ length: 22 }, (_, i) => i), []);
+  const healIndices = useMemo(() => Array.from({ length: 14 }, (_, i) => i), []);
 
   return (
     <>
@@ -421,10 +421,12 @@ function CinematicScene({ cutscene, phase, phaseProgress }: {
       <MafiaFigure phase={phase} />
       <DoctorFigure phase={phase} saved={saved} />
       {bloodActive.current && bloodIndices.map((i) => <BloodParticle key={i} idx={i} startTime={bloodStart.current} />)}
-      {healActive.current  && healIndices.map((i)  => <HealingParticle key={i} idx={i} startTime={healStart.current} />)}
+      {healActive.current && healIndices.map((i) => <HealingParticle key={i} idx={i} startTime={healStart.current} />)}
     </>
   );
 }
+
+import { generateNarratorAudio } from '../lib/elevenlabs';
 
 // ── Overlay text ──────────────────────────────────────────────────────────────
 const PHASE_TEXTS: Record<CutscenePhase, string> = {
@@ -434,10 +436,11 @@ const PHASE_TEXTS: Record<CutscenePhase, string> = {
 // ── Exported component ────────────────────────────────────────────────────────
 export function CutscenePlayer({ cutscene, onComplete }: { cutscene: CutscenePayload; onComplete: () => void }) {
   const { victimName, saved, variant } = cutscene;
-  const [phase, setPhase]               = useState<CutscenePhase>('intro');
+  const [phase, setPhase] = useState<CutscenePhase>('intro');
   const [phaseProgress, setPhaseProgress] = useState(0);
-  const [showFlash, setShowFlash]       = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
   const phaseStartRef = useRef(Date.now());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -456,17 +459,56 @@ export function CutscenePlayer({ cutscene, onComplete }: { cutscene: CutscenePay
           }, 16);
         });
       }
-      if (!cancelled) { await new Promise(r => setTimeout(r, 600)); onComplete(); }
+      if (!cancelled) { await new Promise(r => setTimeout(r, 600)); handleComplete(); }
     }
     runPhases();
     return () => { cancelled = true; };
-  }, [cutscene, onComplete]);
+  }, [cutscene]); // Note: Removed onComplete from deps to prevent closure issues
 
   const subtitleText = phase === 'impact'
     ? saved ? 'The medic arrives just in time...' : `${victimName ?? 'A figure'} falls into the dark...`
     : phase === 'result'
-    ? saved ? `${victimName ?? 'They'} survived — barely.` : `${victimName ?? 'Someone'} has been silenced.`
-    : PHASE_TEXTS[phase];
+      ? saved ? `${victimName ?? 'They'} survived — barely.` : `${victimName ?? 'Someone'} has been silenced.`
+      : PHASE_TEXTS[phase];
+
+  // ── TTS Audio Effect ──
+  useEffect(() => {
+    let isMounted = true;
+
+    // Stop any currently playing audio for the previous phase
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+
+    if (subtitleText && subtitleText.trim() !== '') {
+      generateNarratorAudio(subtitleText).then((audioUrl) => {
+        if (isMounted && audioUrl) {
+          const audio = new Audio(audioUrl);
+          audio.volume = 0.9;
+          audio.play().catch(e => console.error("Cutscene audio playback blocked:", e));
+          audioRef.current = audio;
+        }
+      });
+    }
+
+    return () => {
+      isMounted = false;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, [subtitleText]);
+
+  const handleComplete = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+    onComplete();
+  };
 
   const variantLabels: Record<string, string> = {
     back_alley: '🌧 BACK ALLEY', rooftop: '⚡ ROOFTOP', car_ambush: '🚗 CAR AMBUSH', neon_club: '🎷 NEON CLUB',
@@ -485,20 +527,26 @@ export function CutscenePlayer({ cutscene, onComplete }: { cutscene: CutscenePay
       <AnimatePresence>
         {showFlash && (
           <motion.div key="flash" initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0.7, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}
-            style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
+            style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
               background: saved
                 ? 'radial-gradient(circle at 55% 45%, rgba(0,255,136,0.7) 0%, transparent 65%)'
-                : 'radial-gradient(circle at 55% 45%, rgba(255,220,80,0.85) 0%, rgba(255,60,0,0.5) 40%, transparent 70%)' }} />
+                : 'radial-gradient(circle at 55% 45%, rgba(255,220,80,0.85) 0%, rgba(255,60,0,0.5) 40%, transparent 70%)'
+            }} />
         )}
       </AnimatePresence>
 
       {/* Film grain */}
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.35, pointerEvents: 'none',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E")` }} />
+      <div style={{
+        position: 'absolute', inset: 0, opacity: 0.35, pointerEvents: 'none',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E")`
+      }} />
 
       {/* Vignette */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse 75% 75% at 50% 45%, transparent 35%, rgba(0,0,0,0.88) 100%)' }} />
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 75% 75% at 50% 45%, transparent 35%, rgba(0,0,0,0.88) 100%)'
+      }} />
 
       {/* Scene label */}
       <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 0.75, x: 0 }} transition={{ delay: 0.4 }}
@@ -509,9 +557,11 @@ export function CutscenePlayer({ cutscene, onComplete }: { cutscene: CutscenePay
       {/* Outcome */}
       {phase === 'result' && (
         <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', damping: 14 }}
-          style={{ position: 'absolute', top: '1.4rem', right: '1.6rem', fontFamily: 'var(--font-display)', fontSize: '0.68rem', letterSpacing: '0.15em',
+          style={{
+            position: 'absolute', top: '1.4rem', right: '1.6rem', fontFamily: 'var(--font-display)', fontSize: '0.68rem', letterSpacing: '0.15em',
             color: saved ? '#00ff88' : 'var(--noir-red)',
-            textShadow: saved ? '0 0 16px rgba(0,255,136,0.8)' : 'var(--shadow-red)' }}>
+            textShadow: saved ? '0 0 16px rgba(0,255,136,0.8)' : 'var(--shadow-red)'
+          }}>
           {saved ? '✚ SAVED' : '☠ ELIMINATED'}
         </motion.div>
       )}
@@ -520,10 +570,12 @@ export function CutscenePlayer({ cutscene, onComplete }: { cutscene: CutscenePay
       <AnimatePresence mode="wait">
         {subtitleText && (
           <motion.div key={phase} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.4 }}
-            style={{ position: 'absolute', bottom: '4.5rem', left: 0, right: 0, textAlign: 'center', pointerEvents: 'none',
+            style={{
+              position: 'absolute', bottom: '4.5rem', left: 0, right: 0, textAlign: 'center', pointerEvents: 'none',
               fontFamily: 'var(--font-typewriter)', fontSize: phase === 'result' ? '1.1rem' : '0.88rem', letterSpacing: '0.08em',
               color: phase === 'result' ? (saved ? '#00ff88' : 'var(--noir-red)') : 'rgba(220,200,170,0.85)',
-              textShadow: phase === 'result' ? (saved ? '0 0 24px rgba(0,255,136,0.9)' : 'var(--shadow-red)') : 'none' }}>
+              textShadow: phase === 'result' ? (saved ? '0 0 24px rgba(0,255,136,0.9)' : 'var(--shadow-red)') : 'none'
+            }}>
             {subtitleText}
           </motion.div>
         )}
@@ -532,18 +584,22 @@ export function CutscenePlayer({ cutscene, onComplete }: { cutscene: CutscenePay
       {/* Name plate */}
       {phase !== 'intro' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          style={{ position: 'absolute', bottom: '2.8rem', left: '50%', transform: 'translateX(-50%)',
-            fontFamily: 'var(--font-display)', fontSize: '0.65rem', letterSpacing: '0.2em', color: 'rgba(255,215,0,0.55)' }}>
+          style={{
+            position: 'absolute', bottom: '2.8rem', left: '50%', transform: 'translateX(-50%)',
+            fontFamily: 'var(--font-display)', fontSize: '0.65rem', letterSpacing: '0.2em', color: 'rgba(255,215,0,0.55)'
+          }}>
           {victimName?.toUpperCase() ?? '???'}
         </motion.div>
       )}
 
       {/* Skip */}
       <button onClick={onComplete}
-        style={{ position: 'absolute', top: '1.4rem', right: phase === 'result' ? '8rem' : '1.5rem',
+        style={{
+          position: 'absolute', top: '1.4rem', right: phase === 'result' ? '8rem' : '1.5rem',
           background: 'rgba(20,20,20,0.8)', border: '1px solid rgba(255,215,0,0.25)', color: 'rgba(255,215,0,0.5)',
           fontFamily: 'var(--font-display)', fontSize: '0.6rem', letterSpacing: '0.14em',
-          padding: '0.4rem 0.85rem', borderRadius: 3, cursor: 'pointer', textTransform: 'uppercase' }}>
+          padding: '0.4rem 0.85rem', borderRadius: 3, cursor: 'pointer', textTransform: 'uppercase'
+        }}>
         SKIP →
       </button>
     </div>

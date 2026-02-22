@@ -96,6 +96,30 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Leaderboard endpoint – filtered by room code if ?room= param provided
+app.get('/leaderboard', async (req, res) => {
+  const roomCode = req.query.room as string | undefined;
+
+  let query = supabase
+    .from('player_scores')
+    .select('player_name, total_score, games_won, games_played')
+    .order('total_score', { ascending: false })
+    .limit(10);
+
+  if (roomCode) {
+    query = query.eq('last_room_code', roomCode.toUpperCase());
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('[Leaderboard] Supabase error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data ?? []);
+});
+
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 
 /** Helper: get all local IPv4 addresses (for LAN cross-device play) */
@@ -338,6 +362,7 @@ function resolveVotePhase(code: string): void {
   room.timer = setTimeout(() => startNightPhase(code), 3_000);
 }
 
+
 /** End the game and broadcast roles */
 function endGame(code: string, winner: 'mafia' | 'town'): void {
   const room = getRoom(code);
@@ -388,51 +413,56 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
     });
 
   // ── Upsert player scores ───────────────────────────────────────────────────
+  // NOTE: We look up by session_id (a stable UUID per browser/device), NOT by
+  // player_name. This ensures two different people named "Deep" in separate
+  // rooms each get their own row, while a player who plays again in the same
+  // room (same sessionId persisted in localStorage) correctly accumulates stats.
   for (const player of room.players.values()) {
     const isWinnerSide =
       (winner === 'mafia' && player.role === 'mafia') ||
       (winner === 'town' && player.role !== 'mafia');
     const scoreGain = isWinnerSide ? (winner === 'mafia' ? 10 : 5) : 0;
 
-    console.log(`[endGame] Processing score for ${player.name}: role=${player.role} win=${isWinnerSide} gain=${scoreGain}`);
+    console.log(`[endGame] Processing score for ${player.name} (session=${player.sessionId}): role=${player.role} win=${isWinnerSide} gain=${scoreGain}`);
 
-    // Check if player already exists by name (now the primary key)
     supabase
       .from('player_scores')
-      .select('player_name, total_score, games_won, games_played')
-      .eq('player_name', player.name)
+      .select('session_id, player_name, total_score, games_won, games_played')
+      .eq('session_id', player.sessionId)
       .maybeSingle()
       .then(async ({ data: existing, error: selectErr }) => {
         if (selectErr) {
-          console.error(`[Supabase] player_scores select for ${player.name}:`, selectErr.message);
+          console.error(`[Supabase] player_scores select for session ${player.sessionId}:`, selectErr.message);
           return;
         }
 
-        console.log(`[Supabase] Player check: ${player.name} exists=${!!existing}`);
+        console.log(`[Supabase] Player check: ${player.name} (session=${player.sessionId}) exists=${!!existing}`);
 
         if (existing) {
-          // Update existing player — increment values
+          // Update existing record — also refresh displayed name in case it changed
           const { error: updateErr } = await supabase
             .from('player_scores')
             .update({
+              player_name: player.name, // keep name up-to-date
               total_score: (existing.total_score || 0) + scoreGain,
               games_won: (existing.games_won || 0) + (isWinnerSide ? 1 : 0),
               games_played: (existing.games_played || 0) + 1,
               last_room_code: code,
               updated_at: new Date().toISOString(),
             })
-            .eq('player_name', player.name);
+            .eq('session_id', player.sessionId);
 
           if (updateErr) {
             console.error(`[Supabase] player_scores update for ${player.name}:`, updateErr.message);
           } else {
-            console.log(`[Supabase] leaderboard updated ✓ ${player.name} +${scoreGain}pts`);
+            console.log(`[Supabase] leaderboard updated ✓ ${player.name} (session=${player.sessionId}) +${scoreGain}pts`);
           }
         } else {
-          // Insert new player into leaderboard
+          // First time this session plays — create a new row
           const { error: insertErr } = await supabase
             .from('player_scores')
             .insert({
+              session_id: player.sessionId,
               player_name: player.name,
               total_score: scoreGain,
               games_won: isWinnerSide ? 1 : 0,
@@ -444,7 +474,7 @@ function endGame(code: string, winner: 'mafia' | 'town'): void {
           if (insertErr) {
             console.error(`[Supabase] player_scores insert for ${player.name}:`, insertErr.message);
           } else {
-            console.log(`[Supabase] leaderboard created ✓ ${player.name} ${scoreGain}pts`);
+            console.log(`[Supabase] leaderboard created ✓ ${player.name} (session=${player.sessionId}) ${scoreGain}pts`);
           }
         }
       });
@@ -615,19 +645,11 @@ io.on('connection', (socket: Socket) => {
         case 'kill': {
           if (player.role !== 'mafia') return socket.emit('error', { message: 'Only mafia can kill.' });
           if (data.targetId === socket.id) return socket.emit('error', { message: 'Cannot target yourself.' });
-          // ── FIRST MAFIA KILL = IMMEDIATE resolve ───────────────────────────
-          // Only one mafia vote needed; the first to pick triggers the night.
+          // Store the mafia vote — only the first valid kill vote counts
           if (room.mafiaVotes.length === 0) {
             room.mafiaVotes.push({ voterId: socket.id, targetId: data.targetId });
-            room.nightActionsSubmitted.add(socket.id);
-            touchRoom(data.code);
-            // Lock out other mafias instantly
-            if (room.timer) clearTimeout(room.timer);
-            resolveNightPhase(data.code);
-            return; // skip the common nightActionsSubmitted.add below
           }
-          // Already resolved — duplicate submission, ignore
-          return;
+          break; // Fall through to register "submitted" and check if ALL roles are done
         }
         case 'save': {
           if (player.role !== 'doctor') return socket.emit('error', { message: 'Only doctor can save.' });

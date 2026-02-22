@@ -33,9 +33,8 @@ type VisibilityMode = 'day' | 'night-clear' | 'night-obscured';
 const SCENE_SHELL_STYLE: CSSProperties = {
   position: 'relative',
   width: '100%',
-  maxWidth: 1120,
-  height: 'min(80vh, 820px)',
-  minHeight: 440,
+  height: '100%',
+  minHeight: 0,
   border: '1px solid rgba(255, 215, 0, 0.2)',
   borderRadius: 10,
   overflow: 'hidden',
@@ -1146,6 +1145,8 @@ function RPMAvatarModel({
   const modelRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<THREE.AnimationMixer | null>(null);
   const prevTimeRef = useRef(0);
+  // ── Store foot-pin Y so useFrame can bob from the correct baseline ────────
+  const baseYRef = useRef(0);
 
   const normalizedModel = useMemo(() => {
     const model = cloneSkeleton(scene) as THREE.Object3D;
@@ -1172,6 +1173,9 @@ function RPMAvatarModel({
     model.position.x -= meshCenter.x;
     model.position.z -= meshCenter.z;
     model.position.y -= meshBox.min.y; // pin feet to y=0
+
+    // ── Capture the foot-pin offset so we can bob from it later ────────────
+    baseYRef.current = model.position.y;
 
     // Log bone names once so we can verify the skeleton
     const boneNames: string[] = [];
@@ -1262,10 +1266,9 @@ function RPMAvatarModel({
     prevTimeRef.current = state.clock.elapsedTime;
     // Advance idle mixer (only for alive players)
     if (mixerRef.current && alive) mixerRef.current.update(dt);
-    // Keep existing gentle bob
-    // Very subtle idle bob — stays on the ground
+    // Bob relative to foot-pin baseline — prevents floating/sinking
     const bob = alive ? 0.012 : 0.004;
-    root.position.y = Math.sin(state.clock.elapsedTime * 1.35 + bobSeed) * bob;
+    root.position.y = baseYRef.current + Math.sin(state.clock.elapsedTime * 1.35 + bobSeed) * bob;
   });
 
   return (
